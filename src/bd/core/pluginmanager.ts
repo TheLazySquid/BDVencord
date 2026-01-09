@@ -3,8 +3,7 @@ import AddonManager from "./addonmanager";
 import Remote from "../polyfill/remote";
 import { Logger } from "@utils/Logger";
 import { parseJSDoc } from "bd/utils/jsdoc";
-import Modals from "bd/ui/modals";
-import CommandManager, { CommandTypes, OptionType } from "./commandmanager";
+import { Settings } from "Vencord";
 
 const logger = new Logger("BD", "#3E82E5");
 
@@ -39,9 +38,9 @@ interface PluginInstance {
     onSwitch?(): void;
 }
 
-interface Plugin extends PluginMeta {
+export interface BDPlugin extends PluginMeta {
     exports: any;
-    instance: PluginInstance;
+    instance?: PluginInstance;
 }
 
 export interface PluginInfo {
@@ -53,91 +52,84 @@ export interface PluginInfo {
 }
 
 export default new class PluginManager extends AddonManager {
-    addonFolder = "bdplugins";
-    addonList: Plugin[] = [];
+    addonFolder = "plugins";
+    addonList: BDPlugin[] = [];
 
     async initialize() {
-        const plugins = await VencordNative.bd.getPlugins();
+        const pluginInfo = await VencordNative.bd.getPlugins();
+        this.initPlugins(pluginInfo);
 
-        for (const pluginInfo of plugins) {
-            try {
-                const start = performance.now();
-                const plugin = this.loadPlugin(pluginInfo);
-                const end = performance.now();
+        for (const plugin of this.addonList) {
+            if (!Settings.bdplugins[plugin.id]) continue;
 
-                logger.log(`Loaded ${plugin.name} in ${(end - start).toFixed(2)}ms`);
-            } catch (e) {
-                logger.error(`Failed to load ${pluginInfo.file}`, e);
-            }
+            this.startPlugin(plugin);
         }
 
         VencordNative.bd.addSwitchListener(() => this.onSwitch());
-
-        // Temporary: Add a command to open settings
-        const addonList = this.addonList;
-        CommandManager.registerCommand("BD", {
-            id: "bdsettings",
-            name: "bdsettings",
-            description: "Open the settings of a BetterDiscord plugin",
-            predicate: () => addonList.some(p => p.instance.getSettingsPanel),
-            options: [
-                {
-                    type: OptionType.STRING,
-                    name: "plugin",
-                    description: "The plugin to open the settings for",
-                    required: true,
-                    get choices() {
-                        return addonList.filter(p => p.instance.getSettingsPanel).map(p => ({
-                            label: p.name,
-                            name: p.name,
-                            displayName: p.name,
-                            value: p.id
-                        }));
-                    }
-                }
-            ],
-            execute: (data) => {
-                const id = data.find(o => o.name === "plugin")?.value;
-                if (!id) return;
-
-                const plugin = this.getPlugin(id);
-                if (!plugin) return;
-
-                const getSettingsPanel = plugin.instance.getSettingsPanel?.bind(plugin.instance);
-                if (!getSettingsPanel) return;
-
-                Modals.showAddonSettingsModal(plugin.name, getSettingsPanel());
-            }
-        });
     }
 
-    loadPlugin(info: PluginInfo) {
-        const newlineIndex = info.code.indexOf("\n");
-        const firstLine = info.code.slice(0, newlineIndex);
-        if (!firstLine.includes("/**")) throw new Error("Missing JSDoc header");
+    initPlugins(pluginInfo: PluginInfo[]) {
+        for (const info of pluginInfo) {
+            // Parse the plugin's metadata
+            const newlineIndex = info.code.indexOf("\n");
+            const firstLine = info.code.slice(0, newlineIndex);
+            if (!firstLine.includes("/**")) {
+                logger.error(`Plugin ${info.file} is missing jsdoc header`);
+                continue;
+            }
 
-        // Get the plugin's metadata
-        const plugin = parseJSDoc(info.code) as Partial<Plugin>;
-        if (!plugin.author) plugin.author = "Unknown";
-        if (!plugin.version) plugin.version = "???";
-        if (!plugin.description) plugin.description = "Description not provided.";
+            const plugin = parseJSDoc(info.code) as Partial<BDPlugin>;
+            if (!plugin.author) plugin.author = "Unknown";
+            if (!plugin.version) plugin.version = "???";
+            if (!plugin.description) plugin.description = "Description not provided.";
 
-        plugin.id = plugin.name || info.file;
-        plugin.slug = info.file.replace(".plugin.js", "").replace(/ /g, "-");
-        plugin.filename = info.file;
-        plugin.added = info.added;
-        plugin.modified = info.modified;
-        plugin.size = info.size;
-        plugin.fileContent = info.code;
+            plugin.id = plugin.name || info.file;
+            plugin.slug = info.file.replace(".plugin.js", "").replace(/ /g, "-");
+            plugin.filename = info.file;
+            plugin.added = info.added;
+            plugin.modified = info.modified;
+            plugin.size = info.size;
+            plugin.fileContent = info.code;
 
+            this.addonList.push(plugin as BDPlugin);
+        }
+    }
+
+    startPlugin(plugin: BDPlugin) {
+        try {
+            const start = performance.now();
+
+            // Load and start the plugin
+            if(!plugin.instance) this.loadPlugin(plugin);
+            plugin.instance?.start();
+            
+            const end = performance.now();
+            logger.log(`Loaded ${plugin.name} in ${(end - start).toFixed(2)}ms`);
+            return true;
+        } catch(e) {
+            logger.error("Failed to start", plugin.name, e);
+            return false;
+        }
+    }
+
+    stopPlugin(plugin: BDPlugin) {
+        try {
+            plugin.instance?.stop();
+            logger.log(`Stopped ${plugin.name}`);
+        } catch(e) {
+            logger.error("Failed to stop", plugin.name, e);
+        }
+    }
+
+    loadPlugin(plugin: BDPlugin) {
         // Evaluate the plugin
-        const code = info.code +
+        const code = plugin.fileContent +
             `\nif(module.exports.default) module.exports = module.exports.default;` +
             `\nelse if(typeof module.exports !== "function") module.exports = eval("${plugin.name}");` +
-            `\n//# sourceURL=betterdiscord://bdplugins/${info.file}`;
+            `\n//# sourceURL=betterdiscord://bdplugins/${plugin.filename}`;
 
         const wrappedPlugin = new Function("require", "module", "exports", "__filename", "__dirname", "global", code);
-        const filePath = Remote.path.join(BD_PLUGINS_DIR, info.file);
+        const filePath = Remote.path.join(BD_PLUGINS_DIR, plugin.filename);
 
         const module = { filename: filePath, exports: {} };
         wrappedPlugin(window.require, module, module.exports, module.filename, BD_PLUGINS_DIR, window);
@@ -154,12 +146,7 @@ export default new class PluginManager extends AddonManager {
         if (!instance.start || !instance.stop) throw new Error("Plugin instance is missing start or stop method");
 
         plugin.instance = instance;
-        this.addonList.push(plugin as Plugin);
-
-        instance.start();
         if (instance.observer) this.setupObserver();
-
-        return plugin;
     }
 
     getPlugin(idOrFile: string) { return this.getAddon(idOrFile); }
@@ -168,14 +155,54 @@ export default new class PluginManager extends AddonManager {
     }
 
     isEnabled(idOrFile: string) {
-        if (!this.getPlugin(idOrFile)) return false;
-        return true;
+        const plugin = this.getAddon(idOrFile);
+        if(!plugin) return false;
+
+        return Settings.bdplugins[plugin.id] ?? false;
+    }
+
+    enableAddon(idOrAddon: string) {
+        const plugin = this.getAddon(idOrAddon);
+        if(!plugin || Settings.bdplugins[plugin.id]) return;
+
+        const success = this.startPlugin(plugin);
+        if(success) Settings.bdplugins[plugin.id] = true;
+    }
+
+    disableAddon(idOrAddon: string) {
+        const plugin = this.getAddon(idOrAddon);
+        if(!plugin || !Settings.bdplugins[plugin.id]) return;
+
+        this.stopPlugin(plugin);
+        Settings.bdplugins[plugin.id] = false;
+    }
+
+    toggleAddon(idOrAddon: string) {
+        const plugin = this.getAddon(idOrAddon);
+        if(!plugin) return;
+
+        if(Settings.bdplugins[plugin.id]) {
+            this.stopPlugin(plugin);
+        } else {
+            const success = this.startPlugin(plugin);
+            if(!success) return;
+        }
+
+        Settings.bdplugins[plugin.id] = !Settings.bdplugins[plugin.id];
+    }
+
+    reloadAddon(idOrAddon: string) {
+        const plugin = this.getAddon(idOrAddon);
+        if(!plugin || !Settings.bdplugins[plugin.id]) return;
+
+        this.stopPlugin(plugin);
+        this.startPlugin(plugin);
     }
 
     onSwitch() {
         for (const plugin of this.addonList) {
             try {
-                plugin.instance.onSwitch?.();
+                plugin.instance?.onSwitch?.();
             } catch (e) {
                 console.error("onSwitch failed for " + plugin.name, e);
             }
@@ -202,7 +229,7 @@ export default new class PluginManager extends AddonManager {
     onMutation(mutation: MutationRecord) {
         for (const plugin of this.addonList) {
             try {
-                plugin.instance.observer?.(mutation);
+                plugin.instance?.observer?.(mutation);
             } catch (e) {
                 console.error("plugin observer failed for " + plugin.name, e);
             }

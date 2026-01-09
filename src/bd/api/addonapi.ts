@@ -26,25 +26,25 @@ class AddonAPI {
      * Enables the given addon.
      * @param {string} idOrFile Addon ID or filename
      */
-    enable(idOrAddon: string) {return this.#manager.enableAddon(idOrAddon);}
+    enable(idOrFile: string) {return this.#manager.enableAddon(idOrFile);}
 
     /**
      * Disables the given addon.
      * @param {string} idOrFile Addon ID or filename
      */
-    disable(idOrAddon: string) {return this.#manager.disableAddon(idOrAddon);}
+    disable(idOrFile: string) {return this.#manager.disableAddon(idOrFile);}
 
     /**
      * Toggles if a particular addon is enabled.
      * @param {string} idOrFile Addon ID or filename
      */
-    toggle(idOrAddon: string) {return this.#manager.toggleAddon(idOrAddon);}
+    toggle(idOrFile: string) {return this.#manager.toggleAddon(idOrFile);}
 
     /**
      * Reloads if a particular addon is enabled.
      * @param {string} idOrFile Addon ID or filename
      */
-    reload(idOrFileOrAddon: string) {return this.#manager.reloadAddon(idOrFileOrAddon);}
+    reload(idOrFile: string) {return this.#manager.reloadAddon(idOrFile);}
 
     /**
      * Gets a particular addon.

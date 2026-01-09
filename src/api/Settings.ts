@@ -89,6 +89,10 @@ export interface Settings {
         settingsSync: boolean;
         settingsSyncVersion: number;
     };
+
+    bdplugins: {
+        [plugin: string]: boolean;
+    }
 }
 
 const DefaultSettings: Settings = {
@@ -124,7 +128,9 @@ const DefaultSettings: Settings = {
         url: "https://api.vencord.dev/",
         settingsSync: false,
         settingsSyncVersion: 0
-    }
+    },
+
+    bdplugins: {}
 };
 
 const settings = !IS_REPORTER ? VencordNative.settings.get() : {} as Settings;

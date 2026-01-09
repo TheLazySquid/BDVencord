@@ -71,7 +71,7 @@ function ReloadRequiredCard({ required }: { required: boolean; }) {
     );
 }
 
-const enum SearchStatus {
+export const enum SearchStatus {
     ALL,
     ENABLED,
     DISABLED,

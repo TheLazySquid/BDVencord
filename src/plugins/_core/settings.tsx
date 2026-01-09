@@ -18,7 +18,7 @@
 
 import { definePluginSettings } from "@api/Settings";
 import { BackupRestoreIcon, CloudIcon, MainSettingsIcon, PaintbrushIcon, PatchHelperIcon, PlaceholderIcon, PluginsIcon, UpdaterIcon, VesktopSettingsIcon } from "@components/Icons";
-import { BackupAndRestoreTab, CloudTab, PatchHelperTab, PluginsTab, ThemesTab, UpdaterTab, VencordTab } from "@components/settings/tabs";
+import { BackupAndRestoreTab, CloudTab, PatchHelperTab, PluginsTab, ThemesTab, UpdaterTab, VencordTab, BDPluginsTab } from "@components/settings/tabs";
 import { Devs } from "@utils/constants";
 import { getIntlMessage } from "@utils/discord";
 import { isTruthy } from "@utils/guards";
@@ -237,6 +237,12 @@ export default definePlugin({
                 key: "vencord_plugins",
                 title: "Plugins",
                 Component: PluginsTab,
+                Icon: PluginsIcon
+            }),
+            buildEntry({
+                key: "bd_plugins",
+                title: "BD Plugins",
+                Component: BDPluginsTab,
                 Icon: PluginsIcon
             }),
             buildEntry({
