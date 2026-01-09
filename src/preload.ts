@@ -19,10 +19,13 @@
 import { debounce } from "@shared/debounce";
 import { IpcEvents } from "@shared/IpcEvents";
 import { contextBridge, webFrame } from "electron/renderer";
+import * as BDRemote from "bd/remote";
 
 import VencordNative, { invoke, sendSync } from "./VencordNative";
 
 contextBridge.exposeInMainWorld("VencordNative", VencordNative);
+contextBridge.exposeInMainWorld("BDRemote", BDRemote);
+contextBridge.exposeInMainWorld("process", process);
 
 // Discord
 if (location.protocol !== "data:") {

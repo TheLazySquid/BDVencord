@@ -21,7 +21,7 @@ import { LazyComponent } from "@utils/lazyReact";
 import { Logger } from "@utils/Logger";
 import { canonicalizeMatch } from "@utils/patches";
 import type { FluxStore } from "@vencord/discord-types";
-import type { ModuleExports, WebpackRequire } from "@vencord/discord-types/webpack";
+import type { Module, ModuleExports, WebpackRequire } from "@vencord/discord-types/webpack";
 
 import { traceFunction } from "../debug/Tracer";
 import type { AnyModuleFactory, AnyWebpackRequire } from "./types";
@@ -40,7 +40,7 @@ export let cache: WebpackRequire["c"];
 
 export const fluxStores = new Map<string, FluxStore>();
 
-export type FilterFn = (mod: any) => boolean;
+export type FilterFn = (mod: any, module?: Module) => boolean;
 
 export type PropsFilter = Array<string>;
 export type CodeFilter = Array<string | RegExp>;
@@ -103,6 +103,25 @@ export const factoryListeners = new Set<FactoryListernFn>();
 export function _initWebpack(webpackRequire: WebpackRequire) {
     wreq = webpackRequire;
     cache = webpackRequire.c;
+
+    wreq.d = (target: object, exports: any) => {
+        for (const key in exports) {
+            if (!Reflect.has(exports, key)) continue;
+
+            try {
+                Object.defineProperty(target, key, {
+                    get: () => exports[key](),
+                    set: v => { exports[key] = () => v; },
+                    enumerable: true,
+                    configurable: true
+                });
+            }
+            catch (error) {
+                // eslint-disable-next-line no-console
+                console.error(error);
+            }
+        }
+    };
 
     Reflect.defineProperty(webpackRequire.c, Symbol.toStringTag, {
         value: "ModuleCache",

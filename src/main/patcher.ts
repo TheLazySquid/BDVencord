@@ -22,6 +22,7 @@ import { dirname, join } from "path";
 
 import { RendererSettings } from "./settings";
 import { IS_VANILLA } from "./utils/constants";
+import { IpcEvents } from "@shared/IpcEvents";
 
 console.log("[Vencord] Starting up...");
 
@@ -108,6 +109,10 @@ if (!IS_VANILLA) {
                     // Disable the Electron call entirely so that Discord can't dynamically change the size
                     this.setMinimumSize = (width: number, height: number) => { };
                 }
+
+                this.webContents.on("did-navigate-in-page", () => {
+                    this.webContents.send(IpcEvents.BD_NAVIGATE);
+                });
             } else super(options);
         }
     }

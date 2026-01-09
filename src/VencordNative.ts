@@ -10,6 +10,7 @@ import type { PluginIpcMappings } from "@main/ipcPlugins";
 import type { UserThemeHeader } from "@main/themes";
 import { IpcEvents } from "@shared/IpcEvents";
 import type { IpcRes } from "@utils/types";
+import { PluginInfo } from "bd/core/pluginmanager";
 import { ipcRenderer } from "electron/renderer";
 
 export function invoke<T = any>(event: IpcEvents, ...args: any[]) {
@@ -99,5 +100,14 @@ export default {
             invoke<CspRequestResult>(IpcEvents.CSP_REQUEST_ADD_OVERRIDE, url, directives, callerName),
     },
 
-    pluginHelpers: PluginHelpers
+    pluginHelpers: PluginHelpers,
+
+    bd: {
+        getPluginsDir: () => sendSync<string>(IpcEvents.BD_GET_PLUGINS_DIR),
+        openDialog: (options: any) => invoke<any>(IpcEvents.BD_OPEN_DIALOG, options),
+        getPlugins: () => invoke<PluginInfo[]>(IpcEvents.BD_GET_PLUGINS),
+        addSwitchListener(cb: () => void) {
+            ipcRenderer.on(IpcEvents.BD_NAVIGATE, () => cb());
+        }
+    }
 };
