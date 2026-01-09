@@ -1,8 +1,9 @@
-import { Filters, getByKeys, getMangled, getModule } from "../webpack";
+import { Filters, getByKeys, getMangled } from "../webpack";
 import Patcher from "../core/patcher";
 import Logger from "../core/logger";
 import { React } from "@webpack/common";
 import { wreq } from "@webpack";
+import DiscordModules from "../webpack/modules";
 
 export class MenuPatcher {
     static MAX_PATCH_ITERATIONS = 10;
@@ -83,7 +84,7 @@ export class MenuPatcher {
                 this.MenuComponents.Item ??= contextMenuComponents[matchB[matchB[2] === "customitem" ? 1 : 3]];
             }
 
-            this.MenuComponents.Menu ??= getModule(Filters.byStrings("getContainerProps()", ".keyboardModeEnabled&&null!="), { searchExports: true });
+            this.MenuComponents.Menu ??= DiscordModules.ContextMenuMenu;
         }
 
         startupComplete = Object.values(this.MenuComponents).every(v => v);
@@ -118,7 +119,7 @@ export class MenuPatcher {
         if (!startupComplete) return Logger.warn("ContextMenu~Patcher", "Startup wasn't successfully, aborting initialization.");
 
         const { module, key } = (() => {
-            const foundModule: any = getModule(m => Object.values(m).some(v => typeof v === "function" && v.toString().includes(`type:"CONTEXT_MENU_CLOSE"`)), { searchExports: false });
+            const foundModule: any = DiscordModules.ContextMenuToPatch;
             const foundKey = Object.keys(foundModule).find(k => foundModule[k].length === 3);
 
             return { module: foundModule, key: foundKey };

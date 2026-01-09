@@ -1,13 +1,13 @@
 import { IpcEvents } from "@shared/IpcEvents";
 import { ipcMain, BrowserWindow, dialog } from "electron";
 import { mkdirSync } from "fs";
-import { BD_PLUGINS_DIR } from "./utils/constants";
+import { BD_PLUGINS_DIR, DATA_DIR } from "./utils/constants";
 import { readdir, readFile, stat } from "fs/promises";
 import { join } from "path";
 
 mkdirSync(BD_PLUGINS_DIR, { recursive: true });
 
-ipcMain.on(IpcEvents.BD_GET_PLUGINS_DIR, (e) => e.returnValue = BD_PLUGINS_DIR);
+ipcMain.on(IpcEvents.BD_GET_DATA_DIR, (e) => e.returnValue = DATA_DIR);
 
 ipcMain.handle(IpcEvents.BD_OPEN_DIALOG, async (event, options) => {
     const {
@@ -25,7 +25,7 @@ ipcMain.handle(IpcEvents.BD_OPEN_DIALOG, async (event, options) => {
         modal = false
     } = options;
 
-    if(mode !== "open" && mode !== "save") return Promise.resolve({error: "Unkown Mode: " + mode});
+    if (mode !== "open" && mode !== "save") return Promise.resolve({ error: "Unkown Mode: " + mode });
     const openFunction = mode === "open" ? dialog.showOpenDialog : dialog.showSaveDialog;
 
     // @ts-expect-error cba to write separate types for these dialogs that are never used
@@ -61,7 +61,7 @@ ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async () => {
 
 async function readPluginFile(file: string) {
     const path = join(BD_PLUGINS_DIR, file);
-    
+
     const [code, stats] = await Promise.all([
         readFile(path, "utf-8"),
         stat(path)
@@ -73,5 +73,5 @@ async function readPluginFile(file: string) {
         size: stats.size,
         modified: stats.mtimeMs,
         added: stats.atimeMs
-    }
+    };
 }

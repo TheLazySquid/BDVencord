@@ -1,6 +1,5 @@
 #bd-notifications-root {
     position: fixed;
-    display: flex;
     padding: 16px;
     z-index: 9999;
     pointer-events: none;
@@ -17,6 +16,7 @@
     flex-direction: column;
     gap: 8px;
     z-index: 3002;
+
     /* right above titleBar */
 }
 
@@ -33,7 +33,7 @@
 }
 
 .bd-notification [class*="-markdown"] [class*="-paragraph"]:last-child {
-    margin-bottom: 0px !important;
+    margin-bottom: 0 !important;
 }
 
 .bd-notification-top-left {
@@ -64,7 +64,7 @@
     border-radius: 8px 8px 0 0;
     display: flex;
     flex-direction: column;
-    padding: 16px 40px 0px 16px;
+    padding: 16px 40px 0 16px;
 }
 
 .bd-notification-icon {
@@ -76,9 +76,8 @@
 
 .bd-notification-topbar {
     display: inline-flex;
-    justify-content: space-between;
+    place-content: center space-between;
     align-items: center;
-    align-content: center;
     font-size: 16px;
     font-weight: bold;
     padding: 10px 10px 0;
@@ -101,7 +100,7 @@
     font-weight: 600;
     line-height: 1.25;
     flex: 1;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
 }
@@ -112,7 +111,7 @@
     font-size: 14px;
     font-weight: 400;
     line-height: 1.2857142857142858;
-    word-wrap: break-word;
+    overflow-wrap: break-word;
     word-break: break-word;
     overflow-wrap: break-word;
 }
@@ -143,7 +142,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    padding: 10px 16px 0px 16px;
+    padding: 10px 16px 0;
 }
 
 .bd-notification-action {

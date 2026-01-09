@@ -1,3 +1,4 @@
-// import Remote from "./polyfill/remote";
+import Remote from "./polyfill/remote";
 
-export const BD_PLUGINS_DIR = VencordNative.bd.getPluginsDir();
+export const DATA_DIR = VencordNative.bd.getDataDir();
+export const BD_PLUGINS_DIR = Remote.path.join(DATA_DIR, "bdplugins");

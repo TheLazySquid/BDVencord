@@ -1,9 +1,8 @@
 import type React from "react";
 import type ReactDOMBaseType from "react-dom";
 import type ReactDOMClientType from "react-dom/client";
-import type { ReactSpring, SimpleMarkdown, Dispatcher, InviteActions, RemoteModule, UserAgentInfo, GetClientInfo } from "../types/modules";
-import { getBulkKeyed, Filters, getBySource, getModule, getByKeys, getByStrings } from "./index";
-import memoize from "../utils/memoize";
+import type { ReactSpring, SimpleMarkdown, Dispatcher, InviteActions, RemoteModule, FluxStoreConstructor } from "../types/modules";
+import { getBulkKeyed, Filters } from "./index";
 
 interface ModuleQueries {
     React: typeof React;
@@ -12,11 +11,8 @@ interface ModuleQueries {
     RemoteModule: RemoteModule;
     InviteActions: InviteActions;
     ReactSpring: ReactSpring;
-    // SimpleMarkdownWrapper: SimpleMarkdown;
     Dispatcher: Dispatcher;
     Tooltip: React.ComponentType<{ color?: string; position?: string; text?: string; children: React.FunctionComponent; }>;
-    // TabBarComponent: unknown;
-    // UserProfileComponent: unknown;
     User: any;
     createBotMessage: any;
     Messages: any;
@@ -25,23 +21,16 @@ interface ModuleQueries {
     AccessibilityContext: React.Context<{ reducedMotion: { enabled: false; }; }>;
     Anims: any;
     FocusLock: any;
-    // closeUserSettings: () => boolean;
-    // UserSettingsActions: { open(id: string): void; close(): void; };
-    // UserSettings: any;
-    // PrivateChannelActions: { openPrivateChannel(me: string, them: string): void; };
-    // ChannelActions: { selectPrivateChannel(id: string): void; selectVoiceChannel(a: any, b: any): void; };
-    // ContextMenuMethods: unknown;
-    // // This is supposed to be a fallback but the original filter is broken, so this always is needed
-    // ContextMenuComponent: any;
-
     IndexStore: unknown;
     Authorizer: unknown;
-
+    ContextMenuMenu: any;
+    ContextMenuToPatch: any;
+    SimpleMarkdown: SimpleMarkdown;
+    Flux: {Store: FluxStoreConstructor;};
+    
     iconClasses: any;
     builtInSeperatorClasses: any;
     AnchorClasses: { anchor: string; anchorUnderlineOnHover: string; };
-
-    SimpleMarkdown: SimpleMarkdown;
 }
 
 type Modules = ModuleQueries & {
@@ -142,6 +131,22 @@ export function loadModules() {
             firstId: 56801,
             cacheId: "core-Sidebar"
         },
+        Flux: {
+            filter: m => m.Store?.getAll,
+            firstId: 442837,
+            cacheId: "core-Flux"
+        },
+        ContextMenuMenu: {
+            filter: Filters.byStrings("getContainerProps()", ".keyboardModeEnabled&&null!="),
+            searchExports: true,
+            firstId: 481060,
+            cacheId: "core-ContextMenuMenu"
+        },
+        ContextMenuToPatch: {
+            filter: m => Object.values(m).some(v => typeof v === "function" && v.toString().includes(`type:"CONTEXT_MENU_CLOSE"`)),
+            firstId: 239091,
+            cacheId: "core-ContextMenuToPatch"
+        },
         // Used as target for getWithKey
         IndexStore: {
             filter: Filters.bySource(".getScoreWithoutLoadingLatest"),
@@ -171,100 +176,6 @@ export function loadModules() {
     modules.ReactDOM = Object.assign({}, syncModules.ReactDOMBase, syncModules.ReactDOMClient);
 
     Object.assign(modules, syncModules);
-
-    // const syncModules = getBulkKeyed<Modules>({
-    //     React: {
-    //         filter: Filters.byKeys(["createElement", "cloneElement"]),
-    //         firstId: 483362,
-    //         cacheId: "core-React"
-    //     },
-    //     ReactDOMBase: {
-    //         filter: Filters.byKeys(["createPortal"]),
-    //         firstId: 165737,
-    //         cacheId: "core-ReactDOMBase"
-    //     },
-    //     ReactDOMClient: {
-    //         filter: Filters.byKeys(["createRoot"]),
-    //         firstId: 152792,
-    //         cacheId: "core-ReactDOMClient"
-    //     },
-    //     SimpleMarkdownWrapper: {
-    //         filter: Filters.byKeys(["defaultRules", "parse"]),
-    //         firstId: 454585,
-    //         cacheId: "core-SimpleMarkdownWrapper"
-    //     },
-    //     Dispatcher: {
-    //         filter: Filters.byKeys(["dispatch", "subscribe", "register"]),
-    //         firstId: 570140,
-    //         cacheId: "core-Dispatcher"
-    //     },
-    //     TabBarComponent: {
-    //         filter: Filters.byStrings("({getFocusableElements:()=>{let"),
-    //         searchExports: true,
-    //         firstId: 159691,
-    //         cacheId: "core-TabBarComponent"
-    //     },
-    //     UserProfileComponent: {
-    //         filter: (m) => m.render?.toString?.().includes("pendingThemeColors"),
-    //         firstId: 502762,
-    //         cacheId: "core-UserProfileComponent"
-    //     },
-    //     closeUserSettings: {
-    //         filter: Filters.byStrings("closeUserSettings"),
-    //         firstId: 342386,
-    //         cacheId: "core-closeUserSettings"
-    //     },
-    //     UserSettingsActions: {
-    //         filter: Filters.byKeys(["updateAccount"]),
-    //         firstId: 230711,
-    //         cacheId: "core-UserSettings"
-    //     },
-    //     UserSettings: {
-    //         filter: Filters.byKeys(["openUserSettings", "openUserSettingsFromParsedUrl"]),
-    //         firstId: 518596,
-    //         cacheId: "core-UserSettings"
-    //     },
-    //     PrivateChannelActions: {
-    //         filter: Filters.byKeys(["openPrivateChannel"]),
-    //         firstId: 493683,
-    //         cacheId: "core-PrivateChannelActions"
-    //     },
-    //     ChannelActions: {
-    //         filter: Filters.byKeys(["selectPrivateChannel"]),
-    //         firstId: 287734,
-    //         cacheId: "core-ChannelActions"
-    //     },
-    //     ContextMenuMethods: {
-    //         filter: m => Object.values(m).some(v => typeof v === "function" && v.toString().includes(`type:"CONTEXT_MENU_CLOSE"`)),
-    //         firstId: 239091,
-    //         cacheId: "core-ContextMenuMethods"
-    //     },
-    //     ContextMenuComponent: {
-    //         filter: Filters.byStrings("getContainerProps()", ".keyboardModeEnabled&&null!="),
-    //         searchExports: true,
-    //         firstId: 481060,
-    //         cacheId: "core-ContextMenuComponent"
-    //     },
-    // });
-
-    // const memoModules = memoize({
-    //     get InviteActions(): InviteActions | undefined { return getByKeys(["createInvite"], { firstId: 447543, cacheId: "core-InviteActions" }); },
-    //     get SimpleMarkdown(): SimpleMarkdown | undefined { return getByKeys(["parseBlock", "parseInline", "defaultOutput"], { firstId: 159635, cacheId: "core-SimpleMarkdown" }); },
-    //     get promptToUpload() { return getByStrings(["getUploadCount", ".UPLOAD_FILE_LIMIT_ERROR"], { searchExports: true, firstId: 127654, cacheId: "core-promptToUpload" }); },
-    //     get RemoteModule(): RemoteModule | undefined { return getByKeys(["setBadge"], { firstId: 998502, cacheId: "core-RemoteModule" }); },
-    //     get UserAgentInfo(): UserAgentInfo | undefined { return getByKeys(["os", "layout"], { firstId: 264344, cacheId: "core-UserAgentInfo" }); },
-    //     get GetClientInfo(): GetClientInfo | undefined { return getByStrings(["versionHash"], { firstId: 104639, cacheId: "core-GetClientInfo" }); },
-    //     get MessageUtils() { return getByKeys(["sendMessage"], { firstId: 904245, cacheId: "core-MessageUtils" }); },
-    //     get LinkParser(): any { return getModule(m => m.html && m.requiredFirstCharacters?.[0] === "[", { firstId: 772096, cacheId: "core-LinkParser" }); },
-    //     get DiscordMarkdown(): any { return getModule(m => m?.prototype?.render && m.rules, { firstId: 241209, cacheId: "core-DiscordMarkdown" }); },
-    //     get Layout(): Record<string, any> { return getBySource(["$Root", "buildLayout"], { searchDefault: false, firstId: 509613, cacheId: "core-Layout" })!; },
-    //     get NoticesBaseClasses(): { base: string; } | undefined { return getByKeys(["container", "base", "sidebar"], { cacheId: "core-NoticesBaseClasses" }); },
-    //     get NoticesPageClasses(): { errorPage: string; } | undefined { return getByKeys(["errorPage"], { cacheId: "core-NoticesPageClasses" }); },
-    //     get ViewClasses(): { standardSidebarView: string; } | undefined { return getByKeys(["standardSidebarView"], { cacheId: "core-ViewClasses" }); },
-    // });
-
-    // Object.assign(modules, syncModules, memoModules);
-    // console.log(modules);
 }
 
 export default modules;

@@ -53,7 +53,7 @@ export interface PluginInfo {
 }
 
 export default new class PluginManager extends AddonManager {
-    addonFolder = "plugins";
+    addonFolder = "bdplugins";
     addonList: Plugin[] = [];
 
     async initialize() {

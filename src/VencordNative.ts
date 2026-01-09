@@ -103,7 +103,7 @@ export default {
     pluginHelpers: PluginHelpers,
 
     bd: {
-        getPluginsDir: () => sendSync<string>(IpcEvents.BD_GET_PLUGINS_DIR),
+        getDataDir: () => sendSync<string>(IpcEvents.BD_GET_DATA_DIR),
         openDialog: (options: any) => invoke<any>(IpcEvents.BD_OPEN_DIALOG, options),
         getPlugins: () => invoke<PluginInfo[]>(IpcEvents.BD_GET_PLUGINS),
         addSwitchListener(cb: () => void) {

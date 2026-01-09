@@ -85,6 +85,7 @@
 
 .bd-button .bd-button-content {
     --button--underline-color: transparent;
+
     background-image: linear-gradient(0deg, transparent, transparent 1px, var(--button--underline-color) 0, var(--button--underline-color) 2px, transparent 0);
     display: flex;
     justify-content: center;
@@ -154,12 +155,12 @@
 
 /* Button Looks */
 .bd-button-filled {
-    -webkit-transition: background-color .17s ease, color .17s ease;
+    transition: background-color .17s ease, color .17s ease;
     transition: background-color .17s ease, color .17s ease
 }
 
 .bd-button-outlined {
-    -webkit-transition: color .17s ease, background-color .17s ease, border-color .17s ease;
+    transition: color .17s ease, background-color .17s ease, border-color .17s ease;
     transition: color .17s ease, background-color .17s ease, border-color .17s ease;
     border-width: 1px;
     border-style: solid
@@ -167,8 +168,9 @@
 
 .bd-button-blank {
     background: transparent;
-    color: currentColor;
+    color: currentcolor;
     border: 0;
+
     /* padding: 0; */
     margin: 0
 }
@@ -297,7 +299,7 @@
 }
 
 .bd-button-outlined.bd-button-color-yellow:active {
-    background-color: hsl(var(--yellow-300-hsl)/.1)
+    background-color: hsl(var(--yellow-300-hsl)/10%)
 }
 
 .bd-button-link.bd-button-color-yellow {
@@ -331,7 +333,7 @@
 }
 
 .bd-button-outlined.bd-button-color-link:active {
-    background-color: hsl(var(--text-link-hsl)/.1)
+    background-color: hsl(var(--text-link-hsl)/10%)
 }
 
 .bd-button-link.bd-button-color-link {
@@ -365,7 +367,7 @@
 }
 
 .bd-button-outlined.bd-button-color-white:active {
-    background-color: hsl(var(--white-500-hsl)/.1)
+    background-color: hsl(var(--white-500-hsl)/10%)
 }
 
 .bd-button-link.bd-button-color-white {
@@ -511,19 +513,19 @@
 /* Color Transparent */
 .theme-dark .bd-button-filled.bd-button-color-transparent {
     color: var(--primary-100);
-    background-color: hsl(var(--white-500-hsl)/.1)
+    background-color: hsl(var(--white-500-hsl)/10%)
 }
 
 .theme-dark .bd-button-filled.bd-button-color-transparent:hover {
-    background-color: hsl(var(--white-500-hsl)/.05)
+    background-color: hsl(var(--white-500-hsl)/5%)
 }
 
 .theme-dark .bd-button-filled.bd-button-color-transparent:active {
-    background-color: hsl(var(--white-500-hsl)/.01)
+    background-color: hsl(var(--white-500-hsl)/1%)
 }
 
 .theme-dark .bd-button-filled.bd-button-color-transparent:disabled {
-    background-color: hsl(var(--white-500-hsl)/.1)
+    background-color: hsl(var(--white-500-hsl)/10%)
 }
 
 .theme-dark .bd-button-outlined.bd-button-color-transparent {
@@ -532,7 +534,7 @@
 }
 
 .theme-dark .bd-button-outlined.bd-button-color-transparent:active {
-    background-color: hsl(var(--primary-200-hsl)/.1)
+    background-color: hsl(var(--primary-200-hsl)/10%)
 }
 
 .theme-dark .bd-button-link.bd-button-color-transparent {
@@ -545,19 +547,19 @@
 
 .theme-light .bd-button-filled.bd-button-color-transparent {
     color: var(--primary-400);
-    background-color: hsl(var(--primary-400-hsl)/.01)
+    background-color: hsl(var(--primary-400-hsl)/1%)
 }
 
 .theme-light .bd-button-filled.bd-button-color-transparent:hover {
-    background-color: hsl(var(--primary-400-hsl)/.2)
+    background-color: hsl(var(--primary-400-hsl)/20%)
 }
 
 .theme-light .bd-button-filled.bd-button-color-transparent:active {
-    background-color: hsl(var(--primary-400-hsl)/.25)
+    background-color: hsl(var(--primary-400-hsl)/25%)
 }
 
 .theme-light .bd-button-filled.bd-button-color-transparent:disabled {
-    background-color: hsl(var(--primary-400-hsl)/.01)
+    background-color: hsl(var(--primary-400-hsl)/1%)
 }
 
 .theme-light .bd-button-outlined.bd-button-color-transparent {
@@ -566,7 +568,7 @@
 }
 
 .theme-light .bd-button-outlined.bd-button-color-transparent:active {
-    background-color: hsl(var(--primary-400-hsl)/.1)
+    background-color: hsl(var(--primary-400-hsl)/10%)
 }
 
 .theme-light .bd-button-link.bd-button-color-transparent {
