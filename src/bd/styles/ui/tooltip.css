@@ -10,7 +10,7 @@
   line-height: 16px;
   max-width: 190px;
   box-sizing: border-box;
-  overflow-wrap: break-word;
+  word-wrap: break-word;
   z-index: 1002;
   will-change: opacity, transform;
   box-shadow: var(--elevation-high);

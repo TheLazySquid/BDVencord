@@ -42,11 +42,11 @@
 
 .bd-keybind-wrap.recording,
 .bd-keybind-wrap:not(.bd-keybind-disabled):hover {
-    border-color: hsl(var(--red-400-hsl)/30%);
+    border-color: hsl(var(--red-400-hsl)/.3);
 }
 
 .bd-keybind-wrap.recording {
-    box-shadow: 0 0 6px hsl(var(--red-400-hsl)/30%);
+    box-shadow: 0 0 6px hsl(var(--red-400-hsl)/.3);
 }
 
 .bd-keybind-wrap.recording input {
@@ -63,7 +63,6 @@
 
 .bd-keybind-clear {
     margin-left: 5px;
-
     /* background: none!important; */
     opacity: 0.5;
     padding-right: 4px!important;

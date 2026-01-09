@@ -2,40 +2,40 @@
 
 /* TODO: find a way to go back to glob imports */
 
-@import url("./builtins/customcss.css");
-@import url("./ui/addonlist.css");
-@import url("./ui/addonstore.css");
-@import url("./ui/bdsettings.css");
-@import url("./ui/changelog.css");
-@import url("./ui/checkbox.css");
-@import url("./ui/colorpicker.css");
-@import url("./ui/errormodal.css");
-@import url("./ui/file.css");
-@import url("./ui/flex.css");
-@import url("./ui/floatingwindow.css");
-@import url("./ui/installmodal.css");
-@import url("./ui/keybind.css");
-@import url("./ui/modal.css");
-@import url("./ui/notices.css");
-@import url("./ui/notifications.css");
-@import url("./ui/number.css");
-@import url("./ui/paginator.css");
-@import url("./ui/radio.css");
-@import url("./ui/scroller.css");
-@import url("./ui/sidebar.css");
-@import url("./ui/slider.css");
-@import url("./ui/switch.css");
-@import url("./ui/tabbar.css");
-@import url("./ui/textbox.css");
-@import url("./ui/toasts.css");
-@import url("./ui/tooltip.css");
-@import url("./ui/updater.css");
-@import url("./blankslates/emptyimage.css");
-@import url("./blankslates/noresults.css");
-@import url("./buttons.css");
-@import url("./spinner.css");
-@import url("./search.css");
-@import url("./text.css");
+@import "./builtins/customcss.css";
+@import "./ui/addonlist.css";
+@import "./ui/addonstore.css";
+@import "./ui/bdsettings.css";
+@import "./ui/changelog.css";
+@import "./ui/checkbox.css";
+@import "./ui/colorpicker.css";
+@import "./ui/errormodal.css";
+@import "./ui/file.css";
+@import "./ui/flex.css";
+@import "./ui/floatingwindow.css";
+@import "./ui/installmodal.css";
+@import "./ui/keybind.css";
+@import "./ui/modal.css";
+@import "./ui/notices.css";
+@import "./ui/notifications.css";
+@import "./ui/number.css";
+@import "./ui/paginator.css";
+@import "./ui/radio.css";
+@import "./ui/scroller.css";
+@import "./ui/sidebar.css";
+@import "./ui/slider.css";
+@import "./ui/switch.css";
+@import "./ui/tabbar.css";
+@import "./ui/textbox.css";
+@import "./ui/toasts.css";
+@import "./ui/tooltip.css";
+@import "./ui/updater.css";
+@import "./blankslates/emptyimage.css";
+@import "./blankslates/noresults.css";
+@import "./buttons.css";
+@import "./spinner.css";
+@import "./search.css";
+@import "./text.css";
 
 :root {
     --bd-brand: #3E82E5;
@@ -73,7 +73,6 @@
 
 .bd-version-info {
     padding: 8px 10px;
-
     /* text-transform: capitalize; */
     cursor: pointer;
 }

@@ -141,7 +141,7 @@
         opacity: 0.6;
     }
 
-    100% {
+    to {
         opacity: 1;
     }
 }
@@ -162,7 +162,7 @@
         stroke-dasharray: 130, 200;
     }
 
-    100% {
+    to {
         stroke-dasharray: 130, 200;
         stroke-dashoffset: -124;
     }
@@ -176,7 +176,7 @@
 
 @keyframes bd-spinner-chasing-dots-bounce {
     0%,
-    100% {
+    to {
         transform: scale(0);
     }
 
@@ -198,7 +198,7 @@
         transform: translateX(0) translateY(22px) rotate(-270deg) scale(0.5);
     }
 
-    100% {
+    to {
         transform: rotate(-360deg);
     }
 }
@@ -214,7 +214,7 @@
         opacity: 0.3;
     }
 
-    100% {
+    to {
         transform: scale(1);
         opacity: 1;
     }

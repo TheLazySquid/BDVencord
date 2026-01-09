@@ -5,7 +5,7 @@
 }
 
 .bd-reload:hover {
-  fill: #fff;
+  fill: #ffffff;
 }
 
 .bd-reload-header {
@@ -29,7 +29,8 @@
 .bd-addon-list.bd-grid-view {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  column-gap: 10px;
+  row-gap: 10px;
 }
 
 .bd-addon-list .bd-addon-card {
@@ -119,14 +120,14 @@
 
 .bd-description-wrap {
   flex: 1;
-  padding: 8px 16px 0;
+  padding: 8px 16px 0 16px;
 }
 
 .bd-description-wrap .banner {
   padding: 5px;
   border: 2px solid gray;
   background: #26191e;
-  color: #fff;
+  color: #ffffff;
   font-weight: 700px;
   border-radius: 5px;
   font-size: 16px;
@@ -140,7 +141,7 @@
 }
 
 .banner .bd-icon {
-  fill: #fff;
+  fill: #ffffff;
   margin-right: 5px;
   height: 16px !important;
 }
@@ -186,7 +187,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px 16px;
+  padding: 8px 16px 16px 16px;
   overflow: hidden;
 }
 
@@ -254,7 +255,7 @@
 
 .bd-addon-modal-settings {
   /* padding: 16px; */
-  padding: 0 16px 16px;
+  padding: 0 16px 16px 16px;
 }
 
 .bd-addon-modal-footer .bd-button {
@@ -262,11 +263,11 @@
 }
 
 .bd-addon-modal-footer .bd-button:hover {
-  background-color: rgb(56 117 206);
+  background-color: rgb(56, 117, 206);
 }
 
 .bd-addon-modal-footer .bd-button:active {
-  background-color: rgb(50 104 183);
+  background-color: rgb(50, 104, 183);
 }
 
 .bd-addon-views {
@@ -284,7 +285,7 @@
 }
 
 .bd-addon-controls .bd-button.selected svg {
-  color: #fff;
+  color: #ffffff;
 }
 
 .bd-addon-controls .bd-button:hover {
@@ -304,7 +305,7 @@
 }
 
 .bd-controls-basic .bd-button:active svg {
-  color: #fff;
+  color: #ffffff;
 }
 
 .bd-controls-basic .bd-button:active {
