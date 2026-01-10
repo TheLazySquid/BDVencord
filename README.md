@@ -17,9 +17,9 @@ Restart Discord and you should be good to go.
 
 ## Usage
 
-There is currently no way to manage your BetterDiscord plugins from within Discord. Instead, you will need to manually place the `.plugin.js` files in the `plugins` folder and then restart Discord. The `plugins` folder is inside your Vencord directory, which can be easily found by going to Vencord's settings, pressing "Open Settings Folder", then going back one directory.
+There is currently no way to manage your BetterDiscord plugins from within Discord. Instead, you will need to manually place the `.plugin.js` files your `plugins` folder and then restart Discord. You can find the plugins folder by going to the "BD Plugins" tab in settings and pressing the "Open Plugin Folder" button.
 
-Plugins need to be enabled from inside the "BD Plugins" tab in settings. Their settings can also be accessed there.
+Plugins need to be enabled from inside the BD Plugins tab in settings. Their settings can also be accessed there.
 
 BetterDiscord plugins can be downloaded from the [BetterDiscord site](https://betterdiscord.app/plugins).
 

@@ -1,6 +1,7 @@
 import {React} from "@webpack/common";
 import {none, GetSettingsContext} from "bd/ui/contexts";
-import { ChevronDownIcon } from "bd/ui/icons";
+import {LucideIcon} from "bd/ui/icons";
+import {ChevronDown} from "lucide";
 import type {MouseEvent} from "react";
 
 export interface SelectOption {
@@ -64,7 +65,7 @@ export default function Select({value: initialValue, options, style, onChange, d
     const disabledClass = isDisabled ? " bd-select-disabled" : "";
     return <div className={`bd-select${styleClass}${isOpen}${disabledClass}`} onClick={showMenu}>
         <div className="bd-select-value">{selected.label}</div>
-        <ChevronDownIcon size={16} className="bd-select-arrow" />
+        <LucideIcon icon={ChevronDown} size={16} className="bd-select-arrow" />
         {open && optionComponents}
     </div>;
 }

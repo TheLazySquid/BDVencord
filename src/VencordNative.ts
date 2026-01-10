@@ -104,11 +104,13 @@ export default {
 
     bd: {
         getDataDir: () => sendSync<string>(IpcEvents.BD_GET_DATA_DIR),
-        openDialog: (options: any) => invoke<any>(IpcEvents.BD_OPEN_DIALOG, options),
         getPlugins: () => invoke<PluginInfo[]>(IpcEvents.BD_GET_PLUGINS),
         deletePlugin: (filename: string) => invoke<void>(IpcEvents.BD_DELETE_PLUGIN, filename),
+        openPluginFolder: () => invoke<void>(IpcEvents.BD_OPEN_PLUGIN_FOLDER),
+
+        openDialog: (options: any) => invoke<any>(IpcEvents.BD_OPEN_DIALOG, options),
         addSwitchListener(cb: () => void) {
             ipcRenderer.on(IpcEvents.BD_NAVIGATE, () => cb());
-        }
+        },
     }
 };

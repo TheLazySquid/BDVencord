@@ -1,7 +1,8 @@
 import clsx from "clsx";
 import {React} from "@webpack/common";
 import Flex from "../../base/flex";
-import { CheckIcon } from "bd/ui/icons";
+import {LucideIcon} from "bd/ui/icons";
+import {Check} from "lucide";
 
 export interface CheckboxProps {
     value: boolean,
@@ -42,7 +43,7 @@ export default function CheckBox(props: CheckboxProps) {
                 className={clsx("bd-checkbox-input", props.inputClassName)}
             />
             <div className={clsx("bd-checkbox-box", props.iconClassName)}>
-                <CheckIcon size={18} />
+                <LucideIcon icon={Check} size={18} />
             </div>
             {props.label && (
                 <div className={clsx("bd-checkbox-label", props.label)}>{props.label}</div>

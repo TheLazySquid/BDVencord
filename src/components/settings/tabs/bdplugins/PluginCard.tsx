@@ -3,24 +3,17 @@ import type { BDPlugin } from "bd/core/pluginmanager";
 import { cl } from "../plugins";
 import { CogWheel, DeleteIcon, InfoIcon } from "@components/Icons";
 import { openPluginModal } from "./PluginModal";
-import { Settings } from "Vencord";
-import { useState } from "@webpack/common";
 import pluginmanager from "bd/core/pluginmanager";
 import Modals from "bd/ui/modals";
+import { useSettings } from "@api/Settings";
 
 export default function BDPluginCard({ plugin }: { plugin: BDPlugin; }) {
-    const [enabled, setEnabled] = useState(Settings.bdplugins[plugin.id] ?? false);
+    const settings = useSettings([`bdplugins.${plugin.id}`]);
+    const enabled = settings.bdplugins[plugin.id] ?? false;
 
     const trySetEnabled = (enabled: boolean) => {
-        if(enabled) {
-            const success = pluginmanager.startPlugin(plugin);
-            if(!success) return;
-        } else {
-            pluginmanager.stopPlugin(plugin);
-        }
-
-        setEnabled(enabled);
-        Settings.bdplugins[plugin.id] = enabled;
+        if(enabled) pluginmanager.enable(plugin);
+        else pluginmanager.disable(plugin);
     }
 
     const deletePlugin = () => {

@@ -1,3 +1,4 @@
+import "./index.css";
 import { HeadingTertiary } from "@components/Heading";
 import { SettingsTab, wrapTab } from "../BaseTab";
 import ErrorBoundary from "@components/ErrorBoundary";
@@ -11,6 +12,28 @@ import pluginmanager from "bd/core/pluginmanager";
 import BDPluginCard from "./PluginCard";
 import { Settings } from "Vencord";
 import { useStateFromStores } from "bd/ui/hooks";
+import DiscordModules from "bd/webpack/modules";
+import { Flex } from "@components/Flex";
+import { LucideIcon } from "bd/ui/icons";
+import { Folder, Check, X, IconNode } from "lucide";
+
+interface ActionButtonProps {
+    title: string;
+    icon: IconNode;
+    onClick: () => void;
+}
+
+function ActionButton({ title, icon, onClick }: ActionButtonProps) {
+    return (
+        <DiscordModules.Tooltip color="primary" position="top" aria-label={title} text={title}>
+            {(props) => (
+                <button {...props} onClick={onClick} className="bd-action-button">
+                    <LucideIcon icon={icon} size={18} color="white" />
+                </button>
+            )}
+        </DiscordModules.Tooltip>
+    )
+}
 
 function BDPlugins() {
     const [searchValue, setSearchValue] = useState({ value: "", status: SearchStatus.ALL });
@@ -36,6 +59,12 @@ function BDPlugins() {
 
     return (
         <SettingsTab>
+            <Flex>
+                <ActionButton title="Open Plugin Folder" icon={Folder} onClick={() => VencordNative.bd.openPluginFolder()} />
+                <ActionButton title="Enable All" icon={Check} onClick={() => pluginmanager.enableAll()} />
+                <ActionButton title="Disable All" icon={X} onClick={() => pluginmanager.disableAll()} />
+            </Flex>
+
             <HeadingTertiary className={classes(Margins.top20, Margins.bottom8)}>
                 Filters
             </HeadingTertiary>

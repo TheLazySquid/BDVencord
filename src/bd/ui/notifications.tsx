@@ -2,7 +2,8 @@ import {React} from "@webpack/common";
 import Button, {type ButtonProps, Colors, Looks} from "./base/button";
 import Notifications from "../stores/notifications";
 import Text from "./base/text";
-import {CircleAlertIcon, CircleCheckIcon, InfoIcon, TriangleAlertIcon} from "./icons";
+import { LucideIcon } from "./icons";
+import {CircleAlert, CircleCheck, Info, TriangleAlert} from "lucide";
 import DOMManager from "../core/dommanager";
 import DiscordModules from "../webpack/modules";
 import type {MouseEvent, ReactNode} from "react";
@@ -37,13 +38,13 @@ export interface Notification {
 const Icon = ({type}: {type: NotificationType;}) => {
     switch (type) {
         case "warning":
-            return <TriangleAlertIcon color="var(--status-warning)" size="18px" />;
+            return <LucideIcon icon={TriangleAlert} color="var(--status-warning)" size="18px" />;
         case "error":
-            return <CircleAlertIcon color="var(--status-danger)" size="18px" />;
+            return <LucideIcon icon={CircleAlert} color="var(--status-danger)" size="18px" />;
         case "info":
-            return <InfoIcon color="#3B82F6" size="18px" />;
+            return <LucideIcon icon={Info} color="#3B82F6" size="18px" />;
         case "success":
-            return <CircleCheckIcon color="var(--status-positive)" size="18px" />;
+            return <LucideIcon icon={CircleCheck} color="var(--status-positive)" size="18px" />;
         default:
             return null;
     }

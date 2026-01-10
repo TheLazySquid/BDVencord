@@ -58,5 +58,6 @@ export const enum IpcEvents {
     BD_OPEN_DIALOG = "BDVencordOpenDialog",
     BD_GET_PLUGINS = "BDVencordGetPlugins",
     BD_DELETE_PLUGIN = "BDVencordDeletePlugin",
+    BD_OPEN_PLUGIN_FOLDER = "BDVencordOpenPluginFolder",
     BD_NAVIGATE = "BDVencordNavigate"
 }

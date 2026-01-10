@@ -44,6 +44,7 @@
         "fast-equals": "^6.0.0",
         "fflate": "^0.8.2",
         "gifenc": "github:mattdesl/gifenc#64842fca317b112a8590f8fef2bf3825da8f6fe3",
+        "lucide": "^0.562.0",
         "monaco-editor": "^0.54.0",
         "nanoid": "^5.1.6",
         "virtual-merge": "^1.0.1"

@@ -2,7 +2,8 @@ import {React} from "@webpack/common";
 import DiscordModules from "bd/webpack/modules";
 import {GetSettingsContext, none} from "bd/ui/contexts";
 import type {ChangeEvent} from "react";
-import { CheckIcon, PipetteIcon } from "bd/ui/icons";
+import {LucideIcon} from "bd/ui/icons";
+import {Check,Pipette} from "lucide";
 
 
 const defaultColors = [1752220, 3066993, 3447003, 10181046, 15277667, 15844367, 15105570, 15158332, 9807270, 6323595, 1146986, 2067276, 2123412, 7419530, 11342935, 12745742, 11027200, 10038562, 9936031, 5533306];
@@ -72,7 +73,7 @@ export default function Color({value: initialValue, onChange, colors = defaultCo
                 {props => (
                     <div {...props} className="bd-color-picker-default" style={{backgroundColor: resolveColor(defaultValue)}} onClick={() => change({target: {value: defaultValue}})}>
                         {intValue === resolveColor(defaultValue, false)
-                            ? <CheckIcon size="25px" color={getContrastColor(resolveColor(defaultValue, true))} />
+                            ? <LucideIcon icon={Check} size="25px" color={getContrastColor(resolveColor(defaultValue, true))} />
                             : null
                         }
                     </div>
@@ -81,7 +82,7 @@ export default function Color({value: initialValue, onChange, colors = defaultCo
             <DiscordModules.Tooltip text="Custom Color" position="bottom">
                 {props => (
                     <div className="bd-color-picker-custom">
-                        <PipetteIcon size={14} color={getContrastColor(resolveColor(value, true))} />
+                        <LucideIcon icon={Pipette} size={14} color={getContrastColor(resolveColor(value, true))} />
                         <input {...props} style={{backgroundColor: resolveColor(value)}} type="color" className="bd-color-picker" value={resolveColor(value)} onChange={change} disabled={disabled} />
                     </div>
                 )}
@@ -92,7 +93,7 @@ export default function Color({value: initialValue, onChange, colors = defaultCo
                 colors.map((int, index) => (
                     <div key={index} className="bd-color-picker-swatch-item" style={{backgroundColor: resolveColor(int)}} onClick={() => change({target: {value: int}})}>
                         {intValue === int
-                            ? <CheckIcon size={16} color={getContrastColor(resolveColor(value, true))} />
+                            ? <LucideIcon icon={Check} size={16} color={getContrastColor(resolveColor(value, true))} />
                             : null
                         }
                     </div>

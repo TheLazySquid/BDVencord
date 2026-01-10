@@ -1,7 +1,8 @@
 import { React } from "@webpack/common";
 import Remote from "bd/polyfill/remote";
 import Button from "bd/ui/base/button";
-import { XIcon } from "bd/ui/icons";
+import {LucideIcon} from "bd/ui/icons";
+import {X} from "lucide";
 import type { ChangeEvent } from "react";
 
 
@@ -59,6 +60,6 @@ export default function Filepicker({ multiple, accept, clearable, onChange, disa
     return <div className={`bd-file-input-wrap ${disabled ? "bd-file-input-disabled" : ""}`}>
         <Button size={Button.Sizes.ICON} look={Button.Looks.FILLED} color={Button.Colors.PRIMARY} className="bd-file-input-browse" onClick={onClick}>Browse</Button>
         <input onChange={change} type="file" className="bd-file-input" multiple={multiple} accept={accept} disabled={disabled} ref={inputRef} />
-        {clearable && <Button size={Button.Sizes.ICON} look={Button.Looks.BLANK} onClick={clear} className="bd-file-input-clear"><XIcon size={24} /></Button>}
+        {clearable && <Button size={Button.Sizes.ICON} look={Button.Looks.BLANK} onClick={clear} className="bd-file-input-clear"><LucideIcon icon={X} size={24} /></Button>}
     </div>;
 }

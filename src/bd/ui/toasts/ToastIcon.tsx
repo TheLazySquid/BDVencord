@@ -1,17 +1,18 @@
 import { React } from "@webpack/common";
 import type { ToastType } from "../toasts";
-import { InfoIcon, CircleAlertIcon, CircleCheckIcon, TriangleAlertIcon } from "../icons";
+import {LucideIcon} from "bd/ui/icons";
+import {Info, CircleCheck, TriangleAlert, CircleAlert} from "lucide";
 
 export default function ToastIcon({ type }: { type: ToastType; }) {
     switch (type) {
         case "info":
-            return <InfoIcon size={24} />;
+            return <LucideIcon icon={Info} size={24} />;
         case "success":
-            return <CircleCheckIcon size={24} />;
+            return <LucideIcon icon={CircleCheck} size={24} />;
         case "warning":
-            return <TriangleAlertIcon size={24} />;
+            return <LucideIcon icon={TriangleAlert} size={24} />;
         case "error":
-            return <CircleAlertIcon size={24} />;
+            return <LucideIcon icon={CircleAlert} size={24} />;
         default:
             return null;
     }

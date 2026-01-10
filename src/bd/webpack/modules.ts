@@ -27,6 +27,8 @@ interface ModuleQueries {
     ContextMenuToPatch: any;
     SimpleMarkdown: SimpleMarkdown;
     Flux: {Store: FluxStoreConstructor;};
+    PrivateChannelActions: {openPrivateChannel(me: string, them: string): void;};
+    ChannelActions: {selectPrivateChannel(id: string): void; selectVoiceChannel(a: any, b: any): void;};
     
     iconClasses: any;
     builtInSeperatorClasses: any;
@@ -146,6 +148,16 @@ export function loadModules() {
             filter: m => Object.values(m).some(v => typeof v === "function" && v.toString().includes(`type:"CONTEXT_MENU_CLOSE"`)),
             firstId: 239091,
             cacheId: "core-ContextMenuToPatch"
+        },
+        PrivateChannelActions: {
+            filter: Filters.byKeys(["openPrivateChannel"]),
+            firstId: 493683,
+            cacheId: "core-PrivateChannelActions"
+        },
+        ChannelActions: {
+            filter: Filters.byKeys(["selectPrivateChannel"]),
+            firstId: 287734,
+            cacheId: "core-ChannelActions"
         },
         // Used as target for getWithKey
         IndexStore: {

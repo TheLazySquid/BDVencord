@@ -9,21 +9,22 @@ import "./LinkIconButton.css";
 import { GithubIcon, WebsiteIcon } from "@components/Icons";
 import { getTheme, Theme } from "@utils/discord";
 import { MaskedLink, Tooltip } from "@webpack/common";
-import { CircleQuestionMark, CircleDollarSignIcon, HeartHandshakeIcon } from "bd/ui/icons";
+import {LucideIcon} from "bd/ui/icons";
+import { CircleQuestionMark, CircleDollarSign, HeartHandshake } from "lucide";
 
 export function DonateLinkIcon() {
     const theme = getTheme() === Theme.Light ? "#000000" : "#FFFFFF";
-    return <CircleDollarSignIcon aria-hidden color={theme} className={"vc-settings-modal-link-icon"} />;
+    return <LucideIcon icon={CircleDollarSign} aria-hidden color={theme} className={"vc-settings-modal-link-icon"} />;
 }
 
 export function PatreonLinkIcon() {
     const theme = getTheme() === Theme.Light ? "#000000" : "#FFFFFF";
-    return <HeartHandshakeIcon aria-hidden color={theme} className={"vc-settings-modal-link-icon"} />;
+    return <LucideIcon icon={HeartHandshake} aria-hidden color={theme} className={"vc-settings-modal-link-icon"} />;
 }
 
 export function SupportServerIcon() {
     const theme = getTheme() === Theme.Light ? "#000000" : "#FFFFFF";
-    return <CircleQuestionMark aria-hidden color={theme} className={"vc-settings-modal-link-icon"} />;
+    return <LucideIcon icon={CircleQuestionMark} aria-hidden color={theme} className={"vc-settings-modal-link-icon"} />;
 }
 
 export function GithubLinkIcon() {

@@ -160,6 +160,32 @@ export default new class PluginManager extends AddonManager {
         this.emitChange();
     }
 
+    enable(plugin: BDPlugin) {
+        if (Settings.bdplugins[plugin.id]) return;
+
+        const success = this.startPlugin(plugin);
+        if (success) Settings.bdplugins[plugin.id] = true;
+    }
+
+    disable(plugin: BDPlugin) {
+        if (!Settings.bdplugins[plugin.id]) return;
+
+        this.stopPlugin(plugin);
+        Settings.bdplugins[plugin.id] = false;
+    }
+
+    enableAll() {
+        for (const plugin of this.addonList) {
+            this.enable(plugin);
+        }
+    }
+
+    disableAll() {
+        for (const plugin of this.addonList) {
+            this.disable(plugin);
+        }
+    }
+
     getPlugin(idOrFile: string) { return this.getAddon(idOrFile); }
     getAddon(idOrFile: string) {
         return this.addonList.find(a => a.id === idOrFile || a.filename === idOrFile);
@@ -174,18 +200,12 @@ export default new class PluginManager extends AddonManager {
 
     enableAddon(idOrAddon: string) {
         const plugin = this.getAddon(idOrAddon);
-        if (!plugin || Settings.bdplugins[plugin.id]) return;
-
-        const success = this.startPlugin(plugin);
-        if (success) Settings.bdplugins[plugin.id] = true;
+        if(plugin) this.enable(plugin);
     }
 
     disableAddon(idOrAddon: string) {
         const plugin = this.getAddon(idOrAddon);
-        if (!plugin || !Settings.bdplugins[plugin.id]) return;
-
-        this.stopPlugin(plugin);
-        Settings.bdplugins[plugin.id] = false;
+        if (plugin) this.disable(plugin);
     }
 
     toggleAddon(idOrAddon: string) {

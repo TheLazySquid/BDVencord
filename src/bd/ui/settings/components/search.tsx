@@ -1,6 +1,7 @@
 import { React } from "@webpack/common";
 import Button from "bd/ui/base/button";
-import { SearchIcon, XIcon } from "bd/ui/icons";
+import {LucideIcon} from "bd/ui/icons";
+import {Search as SearchIcon, X} from "lucide";
 import type { ChangeEvent, KeyboardEvent } from "react";
 
 export interface SearchProps {
@@ -35,8 +36,8 @@ export default function Search({ onChange, className, onKeyDown, placeholder }: 
 
     return <div className={"bd-search-wrapper" + (className ? ` ${className}` : "")}>
         <input onChange={change} onKeyDown={onKeyDown} type="text" className="bd-search" placeholder={placeholder} maxLength={50} value={value} ref={input} />
-        {!value && <SearchIcon size={18} />}
-        {value && <Button look={Button.Looks.BLANK} color={Button.Colors.TRANSPARENT} size={Button.Sizes.NONE} onClick={reset}><XIcon size={16} /></Button>}
+        {!value && <LucideIcon icon={SearchIcon} size={18} />}
+        {value && <Button look={Button.Looks.BLANK} color={Button.Colors.TRANSPARENT} size={Button.Sizes.NONE} onClick={reset}><LucideIcon icon={X} size={16} /></Button>}
     </div>;
 
 }

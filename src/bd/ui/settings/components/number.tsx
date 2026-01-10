@@ -1,7 +1,8 @@
 import {React} from "@webpack/common";
 import {none, GetSettingsContext} from "bd/ui/contexts";
 import Button from "bd/ui/base/button";
-import {PlusIcon, MinusIcon} from "bd/ui/icons";
+import {LucideIcon} from "bd/ui/icons";
+import {Plus, Minus} from "lucide";
 import type {ChangeEvent} from "react";
 
 
@@ -45,8 +46,8 @@ export default function Number({value: initialValue, min, max, step = 1, onChang
     }, [onChange, value, min, step]);
 
     return <div className={`bd-number-input-wrapper ${isDisabled ? "bd-number-input-disabled" : ""}`}>
-        <Button size={Button.Sizes.ICON} look={Button.Looks.FILLED} color={Button.Colors.PRIMARY} className="bd-number-input-decrement" onClick={decrement}><MinusIcon size={24} /></Button>
+        <Button size={Button.Sizes.ICON} look={Button.Looks.FILLED} color={Button.Colors.PRIMARY} className="bd-number-input-decrement" onClick={decrement}><LucideIcon icon={Minus} size={24} /></Button>
         <input onChange={change} type="number" className="bd-number-input" min={min} max={max} step={step} value={value} disabled={isDisabled} />
-        <Button size={Button.Sizes.ICON} look={Button.Looks.FILLED} color={Button.Colors.PRIMARY} className="bd-number-input-increment" onClick={increment}><PlusIcon size={24} /></Button>
+        <Button size={Button.Sizes.ICON} look={Button.Looks.FILLED} color={Button.Colors.PRIMARY} className="bd-number-input-increment" onClick={increment}><LucideIcon icon={Plus} size={24} /></Button>
     </div>;
 }
