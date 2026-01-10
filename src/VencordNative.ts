@@ -103,14 +103,24 @@ export default {
     pluginHelpers: PluginHelpers,
 
     bd: {
-        getDataDir: () => sendSync<string>(IpcEvents.BD_GET_DATA_DIR),
         getPlugins: () => invoke<PluginInfo[]>(IpcEvents.BD_GET_PLUGINS),
+        addPluginCreateListener(cb: (info: PluginInfo) => void) {
+            ipcRenderer.on(IpcEvents.BD_PLUGIN_CREATED, (_, info: PluginInfo) => cb(info));
+        },
+        addPluginUpdateListener(cb: (info: PluginInfo) => void) {
+            ipcRenderer.on(IpcEvents.BD_PLUGIN_UPDATED, (_, info: PluginInfo) => cb(info));
+        },
+        addPluginDeleteListener(cb: (filename: string) => void) {
+            ipcRenderer.on(IpcEvents.BD_PLUGIN_DELETED, (_, filename: string) => cb(filename));
+        },
+
+        getDataDir: () => sendSync<string>(IpcEvents.BD_GET_DATA_DIR),
         deletePlugin: (filename: string) => invoke<void>(IpcEvents.BD_DELETE_PLUGIN, filename),
         openPluginFolder: () => invoke<void>(IpcEvents.BD_OPEN_PLUGIN_FOLDER),
 
         openDialog: (options: any) => invoke<any>(IpcEvents.BD_OPEN_DIALOG, options),
         addSwitchListener(cb: () => void) {
-            ipcRenderer.on(IpcEvents.BD_NAVIGATE, () => cb());
+            ipcRenderer.on(IpcEvents.BD_NAVIGATED, () => cb());
         },
     }
 };

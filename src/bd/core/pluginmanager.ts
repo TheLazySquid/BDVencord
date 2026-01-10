@@ -57,7 +57,11 @@ export default new class PluginManager extends AddonManager {
 
     async initialize() {
         const pluginInfo = await VencordNative.bd.getPlugins();
-        this.initPlugins(pluginInfo);
+        for (const info of pluginInfo) {
+            const plugin = this.createPlugin(info);
+            if (plugin) this.addonList.push(plugin);
+        }
+        this.sortAddons();
 
         for (const plugin of this.addonList) {
             if (!Settings.bdplugins[plugin.id]) continue;
@@ -66,33 +70,32 @@ export default new class PluginManager extends AddonManager {
         }
 
         VencordNative.bd.addSwitchListener(() => this.onSwitch());
+        this.watchChanges();
     }
 
-    initPlugins(pluginInfo: PluginInfo[]) {
-        for (const info of pluginInfo) {
-            // Parse the plugin's metadata
-            const newlineIndex = info.code.indexOf("\n");
-            const firstLine = info.code.slice(0, newlineIndex);
-            if (!firstLine.includes("/**")) {
-                logger.error(`Plugin ${info.file} is missing jsdoc header`);
-                continue;
-            }
-
-            const plugin = parseJSDoc(info.code) as Partial<BDPlugin>;
-            if (!plugin.author) plugin.author = "Unknown";
-            if (!plugin.version) plugin.version = "???";
-            if (!plugin.description) plugin.description = "Description not provided.";
-
-            plugin.id = plugin.name || info.file;
-            plugin.slug = info.file.replace(".plugin.js", "").replace(/ /g, "-");
-            plugin.filename = info.file;
-            plugin.added = info.added;
-            plugin.modified = info.modified;
-            plugin.size = info.size;
-            plugin.fileContent = info.code;
-
-            this.addonList.push(plugin as BDPlugin);
+    createPlugin(info: PluginInfo) {
+        // Parse the plugin's metadata
+        const newlineIndex = info.code.indexOf("\n");
+        const firstLine = info.code.slice(0, newlineIndex);
+        if (!firstLine.includes("/**")) {
+            logger.error(`Plugin ${info.file} is missing jsdoc header`);
+            return;
         }
+
+        const plugin = parseJSDoc(info.code) as Partial<BDPlugin>;
+        if (!plugin.author) plugin.author = "Unknown";
+        if (!plugin.version) plugin.version = "???";
+        if (!plugin.description) plugin.description = "Description not provided.";
+
+        plugin.id = plugin.name || info.file;
+        plugin.slug = info.file.replace(".plugin.js", "").replace(/ /g, "-");
+        plugin.filename = info.file;
+        plugin.added = info.added;
+        plugin.modified = info.modified;
+        plugin.size = info.size;
+        plugin.fileContent = info.code;
+
+        return plugin as BDPlugin;
     }
 
     startPlugin(plugin: BDPlugin) {
@@ -149,15 +152,51 @@ export default new class PluginManager extends AddonManager {
         if (instance.observer) this.setupObserver();
     }
 
-    deletePlugin(plugin: BDPlugin) {
+    watchChanges() {
+        VencordNative.bd.addPluginDeleteListener((filename) => {
+            const plugin = this.getAddon(filename);
+            if (plugin) this.deletePlugin(plugin);
+        });
+
+        VencordNative.bd.addPluginCreateListener((info) => {
+            const plugin = this.createPlugin(info);
+            if (!plugin) return;
+
+            if (Settings.bdplugins[plugin.id]) this.startPlugin(plugin);
+
+            this.addonList.push(plugin);
+            this.sortAddons();
+            this.emitChange();
+        });
+
+        VencordNative.bd.addPluginUpdateListener((info) => {
+            const oldPlugin = this.getAddon(info.file);
+            if (oldPlugin) this.deletePlugin(oldPlugin);
+
+            const plugin = this.createPlugin(info);
+            if (!plugin) return;
+
+            if (Settings.bdplugins[plugin.id]) this.startPlugin(plugin);
+
+            this.addonList.push(plugin);
+            this.sortAddons();
+            this.emitChange();
+        });
+    }
+
+    deletePlugin(plugin: BDPlugin, removeFile = false) {
         const index = this.addonList.indexOf(plugin);
         if (index === -1) return;
 
-        this.stopPlugin(plugin);
-        VencordNative.bd.deletePlugin(plugin.filename);
+        if (Settings.bdplugins[plugin.id]) this.stopPlugin(plugin);
+        if (removeFile) VencordNative.bd.deletePlugin(plugin.filename);
 
         this.addonList.splice(index, 1);
         this.emitChange();
+    }
+
+    sortAddons() {
+        this.addonList.sort((a, b) => a.name.localeCompare(b.name));
     }
 
     enable(plugin: BDPlugin) {
@@ -200,7 +239,7 @@ export default new class PluginManager extends AddonManager {
 
     enableAddon(idOrAddon: string) {
         const plugin = this.getAddon(idOrAddon);
-        if(plugin) this.enable(plugin);
+        if (plugin) this.enable(plugin);
     }
 
     disableAddon(idOrAddon: string) {

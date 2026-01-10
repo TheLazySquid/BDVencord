@@ -54,10 +54,14 @@ export const enum IpcEvents {
     RENDERER_CSS_UPDATE = "VencordRendererCssUpdate",
     PRELOAD_GET_RENDERER_JS = "VencordPreloadGetRendererJs",
 
+    BD_GET_PLUGINS = "BDVencordGetPlugins",
+    BD_PLUGIN_CREATED = "BDVencordPluginCreated",
+    BD_PLUGIN_DELETED = "BDVencordPluginDeleted",
+    BD_PLUGIN_UPDATED = "BDVencordPluginUpdated",
+
     BD_GET_DATA_DIR = "BDVencordGetDataDir",
     BD_OPEN_DIALOG = "BDVencordOpenDialog",
-    BD_GET_PLUGINS = "BDVencordGetPlugins",
     BD_DELETE_PLUGIN = "BDVencordDeletePlugin",
     BD_OPEN_PLUGIN_FOLDER = "BDVencordOpenPluginFolder",
-    BD_NAVIGATE = "BDVencordNavigate"
+    BD_NAVIGATED = "BDVencordNavigate"
 }

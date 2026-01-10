@@ -12,15 +12,15 @@ export default function BDPluginCard({ plugin }: { plugin: BDPlugin; }) {
     const enabled = settings.bdplugins[plugin.id] ?? false;
 
     const trySetEnabled = (enabled: boolean) => {
-        if(enabled) pluginmanager.enable(plugin);
+        if (enabled) pluginmanager.enable(plugin);
         else pluginmanager.disable(plugin);
-    }
+    };
 
     const deletePlugin = () => {
         Modals.showConfirmationModal("Deletion confirmation", `Are you sure you want to delete ${plugin.name}?`, {
-            onConfirm: () => pluginmanager.deletePlugin(plugin)
+            onConfirm: () => pluginmanager.deletePlugin(plugin, true)
         });
-    }
+    };
 
     return (
         <AddonCard

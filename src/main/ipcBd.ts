@@ -1,9 +1,11 @@
 import { IpcEvents } from "@shared/IpcEvents";
 import { ipcMain, BrowserWindow, dialog, shell } from "electron";
-import { mkdirSync } from "fs";
+import { FSWatcher, mkdirSync, watch } from "fs";
 import { BD_PLUGINS_DIR, DATA_DIR } from "./utils/constants";
 import { readdir, readFile, stat, rm } from "fs/promises";
 import { join } from "path";
+import { debounce } from "@shared/debounce";
+import { PluginInfo } from "bd/core/pluginmanager";
 
 mkdirSync(BD_PLUGINS_DIR, { recursive: true });
 
@@ -50,11 +52,68 @@ ipcMain.handle(IpcEvents.BD_OPEN_DIALOG, async (event, options) => {
     ].filter(e => e));
 });
 
-ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async () => {
+let pluginWatcher: FSWatcher | null = null;
+ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
     const files = await readdir(BD_PLUGINS_DIR, { withFileTypes: true });
     const pluginFiles = files
         .filter(f => f.isFile() && f.name.endsWith(".plugin.js"))
         .map(f => f.name);
+
+    const fileSet = new Set(pluginFiles);
+
+    // Watch the plugins directory for changes
+    if (pluginWatcher) pluginWatcher.close();
+    const updateTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+    const ignoredFiles = new Set<string>();
+
+    pluginWatcher = watch(BD_PLUGINS_DIR, { persistent: false }, async (type, filename) => {
+        if (!filename || !filename.endsWith(".plugin.js")) return;
+
+        const filePath = join(BD_PLUGINS_DIR, filename);
+        const stats = await stat(filePath).catch(() => null);
+
+        if (!stats) {
+            // Node's watcher fires event multiple times sometimes
+            if (!fileSet.has(filename)) return;
+            fileSet.delete(filename);
+
+            sender.postMessage(IpcEvents.BD_PLUGIN_DELETED, filename);
+            return;
+        }
+
+        if (fileSet.has(filename) && type === "rename") return;
+
+        // Read the new/updated plugin
+        const code = await readFile(filePath, "utf-8");
+        const info: PluginInfo = {
+            code,
+            file: filename,
+            size: stats.size,
+            modified: stats.mtimeMs,
+            added: stats.atimeMs
+        };
+
+        if (type === "rename") {
+            // Plugin created
+            fileSet.add(filename);
+            sender.postMessage(IpcEvents.BD_PLUGIN_CREATED, info);
+
+            // A few changes event will also be fired, ignore it
+            ignoredFiles.add(filename);
+            setTimeout(() => ignoredFiles.delete(filename), 2000);
+        } else {
+            if (ignoredFiles.has(filename)) return;
+
+            // Plugin updated, debounce changes
+            if (updateTimeouts.has(filename)) clearTimeout(updateTimeouts.get(filename));
+            const timeout = setTimeout(() => {
+                sender.postMessage(IpcEvents.BD_PLUGIN_UPDATED, info);
+                updateTimeouts.delete(filename);
+            }, 500);
+
+            updateTimeouts.set(filename, timeout);
+        }
+    });
 
     return await Promise.all(pluginFiles.map(readPluginFile));
 });
