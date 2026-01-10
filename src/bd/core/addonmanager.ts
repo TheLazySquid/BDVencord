@@ -1,4 +1,6 @@
-export default abstract class AddonManager {
+import Store from "bd/stores/base";
+
+export default abstract class AddonManager extends Store {
     abstract addonFolder: string;
     public addonList: any[] = [];
 

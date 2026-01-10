@@ -6,6 +6,7 @@ import { openPluginModal } from "./PluginModal";
 import { Settings } from "Vencord";
 import { useState } from "@webpack/common";
 import pluginmanager from "bd/core/pluginmanager";
+import Modals from "bd/ui/modals";
 
 export default function BDPluginCard({ plugin }: { plugin: BDPlugin; }) {
     const [enabled, setEnabled] = useState(Settings.bdplugins[plugin.id] ?? false);
@@ -22,6 +23,12 @@ export default function BDPluginCard({ plugin }: { plugin: BDPlugin; }) {
         Settings.bdplugins[plugin.id] = enabled;
     }
 
+    const deletePlugin = () => {
+        Modals.showConfirmationModal("Deletion confirmation", `Are you sure you want to delete ${plugin.name}?`, {
+            onConfirm: () => pluginmanager.deletePlugin(plugin)
+        });
+    }
+
     return (
         <AddonCard
             name={plugin.name}
@@ -30,9 +37,12 @@ export default function BDPluginCard({ plugin }: { plugin: BDPlugin; }) {
             setEnabled={trySetEnabled}
             infoButton={
                 <>
-                    {/* <button className={cl("info-button")}>
+                    <button
+                        onClick={() => deletePlugin()}
+                        className={cl("info-button")}
+                    >
                         <DeleteIcon className={cl("info-icon")} />
-                    </button> */}
+                    </button>
                     <button
                         role="switch"
                         onClick={() => openPluginModal(plugin, enabled)}

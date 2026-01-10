@@ -9,6 +9,22 @@ import "./LinkIconButton.css";
 import { GithubIcon, WebsiteIcon } from "@components/Icons";
 import { getTheme, Theme } from "@utils/discord";
 import { MaskedLink, Tooltip } from "@webpack/common";
+import { CircleQuestionMark, CircleDollarSignIcon, HeartHandshakeIcon } from "bd/ui/icons";
+
+export function DonateLinkIcon() {
+    const theme = getTheme() === Theme.Light ? "#000000" : "#FFFFFF";
+    return <CircleDollarSignIcon aria-hidden color={theme} className={"vc-settings-modal-link-icon"} />;
+}
+
+export function PatreonLinkIcon() {
+    const theme = getTheme() === Theme.Light ? "#000000" : "#FFFFFF";
+    return <HeartHandshakeIcon aria-hidden color={theme} className={"vc-settings-modal-link-icon"} />;
+}
+
+export function SupportServerIcon() {
+    const theme = getTheme() === Theme.Light ? "#000000" : "#FFFFFF";
+    return <CircleQuestionMark aria-hidden color={theme} className={"vc-settings-modal-link-icon"} />;
+}
 
 export function GithubLinkIcon() {
     const theme = getTheme() === Theme.Light ? "#000000" : "#FFFFFF";
@@ -37,5 +53,7 @@ function LinkIcon({ text, href, Icon }: Props & { Icon: React.ComponentType; }) 
     );
 }
 
+export const DonateButton = (props: Props) => <LinkIcon {...props} Icon={DonateLinkIcon} />;
+export const PatreonButton = (props: Props) => <LinkIcon {...props} Icon={PatreonLinkIcon} />;
 export const WebsiteButton = (props: Props) => <LinkIcon {...props} Icon={WebsiteLinkIcon} />;
 export const GithubButton = (props: Props) => <LinkIcon {...props} Icon={GithubLinkIcon} />;

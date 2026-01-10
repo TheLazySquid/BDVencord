@@ -2,7 +2,7 @@ import { IpcEvents } from "@shared/IpcEvents";
 import { ipcMain, BrowserWindow, dialog } from "electron";
 import { mkdirSync } from "fs";
 import { BD_PLUGINS_DIR, DATA_DIR } from "./utils/constants";
-import { readdir, readFile, stat } from "fs/promises";
+import { readdir, readFile, stat, rm } from "fs/promises";
 import { join } from "path";
 
 mkdirSync(BD_PLUGINS_DIR, { recursive: true });
@@ -57,6 +57,11 @@ ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async () => {
         .map(f => f.name);
 
     return await Promise.all(pluginFiles.map(readPluginFile));
+});
+
+ipcMain.handle(IpcEvents.BD_DELETE_PLUGIN, async (_, file: string) => {
+    const path = join(BD_PLUGINS_DIR, file);
+    await rm(path);
 });
 
 async function readPluginFile(file: string) {

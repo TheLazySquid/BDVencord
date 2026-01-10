@@ -100,13 +100,13 @@ export default new class PluginManager extends AddonManager {
             const start = performance.now();
 
             // Load and start the plugin
-            if(!plugin.instance) this.loadPlugin(plugin);
+            if (!plugin.instance) this.loadPlugin(plugin);
             plugin.instance?.start();
-            
+
             const end = performance.now();
             logger.log(`Loaded ${plugin.name} in ${(end - start).toFixed(2)}ms`);
             return true;
-        } catch(e) {
+        } catch (e) {
             logger.error("Failed to start", plugin.name, e);
             return false;
         }
@@ -116,7 +116,7 @@ export default new class PluginManager extends AddonManager {
         try {
             plugin.instance?.stop();
             logger.log(`Stopped ${plugin.name}`);
-        } catch(e) {
+        } catch (e) {
             logger.error("Failed to stop", plugin.name, e);
         }
     }
@@ -149,6 +149,17 @@ export default new class PluginManager extends AddonManager {
         if (instance.observer) this.setupObserver();
     }
 
+    deletePlugin(plugin: BDPlugin) {
+        const index = this.addonList.indexOf(plugin);
+        if (index === -1) return;
+
+        this.stopPlugin(plugin);
+        VencordNative.bd.deletePlugin(plugin.filename);
+
+        this.addonList.splice(index, 1);
+        this.emitChange();
+    }
+
     getPlugin(idOrFile: string) { return this.getAddon(idOrFile); }
     getAddon(idOrFile: string) {
         return this.addonList.find(a => a.id === idOrFile || a.filename === idOrFile);
@@ -156,22 +167,22 @@ export default new class PluginManager extends AddonManager {
 
     isEnabled(idOrFile: string) {
         const plugin = this.getAddon(idOrFile);
-        if(!plugin) return false;
+        if (!plugin) return false;
 
         return Settings.bdplugins[plugin.id] ?? false;
     }
 
     enableAddon(idOrAddon: string) {
         const plugin = this.getAddon(idOrAddon);
-        if(!plugin || Settings.bdplugins[plugin.id]) return;
+        if (!plugin || Settings.bdplugins[plugin.id]) return;
 
         const success = this.startPlugin(plugin);
-        if(success) Settings.bdplugins[plugin.id] = true;
+        if (success) Settings.bdplugins[plugin.id] = true;
     }
 
     disableAddon(idOrAddon: string) {
         const plugin = this.getAddon(idOrAddon);
-        if(!plugin || !Settings.bdplugins[plugin.id]) return;
+        if (!plugin || !Settings.bdplugins[plugin.id]) return;
 
         this.stopPlugin(plugin);
         Settings.bdplugins[plugin.id] = false;
@@ -179,13 +190,13 @@ export default new class PluginManager extends AddonManager {
 
     toggleAddon(idOrAddon: string) {
         const plugin = this.getAddon(idOrAddon);
-        if(!plugin) return;
+        if (!plugin) return;
 
-        if(Settings.bdplugins[plugin.id]) {
+        if (Settings.bdplugins[plugin.id]) {
             this.stopPlugin(plugin);
         } else {
             const success = this.startPlugin(plugin);
-            if(!success) return;
+            if (!success) return;
         }
 
         Settings.bdplugins[plugin.id] = !Settings.bdplugins[plugin.id];
@@ -193,7 +204,7 @@ export default new class PluginManager extends AddonManager {
 
     reloadAddon(idOrAddon: string) {
         const plugin = this.getAddon(idOrAddon);
-        if(!plugin || !Settings.bdplugins[plugin.id]) return;
+        if (!plugin || !Settings.bdplugins[plugin.id]) return;
 
         this.stopPlugin(plugin);
         this.startPlugin(plugin);

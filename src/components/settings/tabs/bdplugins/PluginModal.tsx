@@ -1,12 +1,17 @@
+import "./PluginModal.css";
 import { Margins } from "@components/margins";
 import { ModalCloseButton, ModalContent, ModalHeader, ModalProps, ModalRoot, ModalSize, openModal } from "@utils/modal";
-import { Forms, React, Text } from "@webpack/common";
+import { Forms, React, Text, Tooltip } from "@webpack/common";
 import { BDPlugin } from "bd/core/pluginmanager";
-import { cl } from "../plugins";
 import { Flex } from "@components/Flex";
 import { classes } from "@utils/misc";
 import type { RefObject } from "react";
 import ErrorBoundary from "@components/ErrorBoundary";
+import { DonateButton, GithubButton, PatreonButton, SupportServerIcon, WebsiteButton } from "../plugins/LinkIconButton";
+import { classNameFactory } from "@utils/css";
+import Modals from "bd/ui/modals";
+
+const cl = classNameFactory("vc-plugin-modal-");
 
 interface BDPluginModalProps extends ModalProps {
     plugin: BDPlugin;
@@ -68,7 +73,43 @@ function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginMo
                     <Flex className={cl("info")}>
                         <Forms.FormText className={cl("description")}>{plugin.description}</Forms.FormText>
                         <div className="vc-settings-modal-links">
-                            {/* BDVencord TODO: Patreon, Donate, Support Server, Source, Website */}
+                            {plugin.patreon && (
+                                <PatreonButton
+                                    text="Support the author on Patreon"
+                                    href={plugin.patreon}
+                                />
+                            )}
+                            {plugin.donate && (
+                                <DonateButton
+                                    text="Support the author"
+                                    href={plugin.donate}
+                                />
+                            )}
+                            {plugin.invite && (
+                                <Tooltip text="Join support server">
+                                    {props => (
+                                        <button
+                                            {...props}
+                                            className="join-support-server"
+                                            onClick={() => Modals.showGuildJoinModal(plugin.invite!)}
+                                        >
+                                            <SupportServerIcon />
+                                        </button>
+                                    )}
+                                </Tooltip>
+                            )}
+                            {plugin.website && (
+                                <WebsiteButton
+                                    text="View more info"
+                                    href={plugin.website}
+                                />
+                            )}
+                            {plugin.source && (
+                                <GithubButton
+                                    text="View source code"
+                                    href={plugin.source}
+                                />
+                            )}
                         </div>
                     </Flex>
                     <Text variant="heading-lg/semibold" className={classes(Margins.top8, Margins.bottom8)}>Author</Text>

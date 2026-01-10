@@ -10,9 +10,11 @@ import { Paragraph } from "@components/Paragraph";
 import pluginmanager from "bd/core/pluginmanager";
 import BDPluginCard from "./PluginCard";
 import { Settings } from "Vencord";
+import { useStateFromStores } from "bd/ui/hooks";
 
 function BDPlugins() {
     const [searchValue, setSearchValue] = useState({ value: "", status: SearchStatus.ALL });
+    const plugins = useStateFromStores(pluginmanager, () => pluginmanager.addonList.concat(), [pluginmanager], true);
 
     const onSearch = (query: string) => setSearchValue(prev => ({ ...prev, value: query }));
     const onStatusChange = (status: SearchStatus) => setSearchValue(prev => ({ ...prev, status }));
@@ -20,7 +22,7 @@ function BDPlugins() {
     const search = searchValue.value.toLowerCase();
     const status = searchValue.status;
 
-    const plugins = pluginmanager.addonList.filter((plugin) => {
+    const filteredPlugins = plugins.filter((plugin) => {
         if(status === SearchStatus.ENABLED && !Settings.bdplugins[plugin.id]) return false;
         else if(status === SearchStatus.DISABLED && Settings.bdplugins[plugin.id]) return false;
 
@@ -62,8 +64,8 @@ function BDPlugins() {
             <HeadingTertiary className={Margins.top20}>Plugins</HeadingTertiary>
 
             <div className={cl("grid")}>
-                {plugins.length
-                    ? plugins.map(plugin => (
+                {filteredPlugins.length
+                    ? filteredPlugins.map(plugin => (
                         <BDPluginCard key={plugin.id} plugin={plugin} />
                     )) : <Paragraph>No plugins meet the search criteria.</Paragraph>
                 }
