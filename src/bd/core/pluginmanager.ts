@@ -4,6 +4,7 @@ import Remote from "../polyfill/remote";
 import { Logger } from "@utils/Logger";
 import { parseJSDoc } from "bd/utils/jsdoc";
 import { Settings } from "Vencord";
+import toasts from "bd/stores/toasts";
 
 const logger = new Logger("BD", "#3E82E5");
 
@@ -63,11 +64,16 @@ export default new class PluginManager extends AddonManager {
         }
         this.sortAddons();
 
+        let started = 0;
         for (const plugin of this.addonList) {
             if (!Settings.bdplugins[plugin.id]) continue;
 
-            this.startPlugin(plugin);
+            let success = this.startPlugin(plugin, false);
+            if (success) started++;
         }
+
+        const message = `Started ${started} BetterDiscord plugin${started !== 1 ? "s" : ""}`;
+        toasts.show(message, { type: "success" });
 
         VencordNative.bd.addSwitchListener(() => this.onSwitch());
         this.watchChanges();
@@ -79,6 +85,7 @@ export default new class PluginManager extends AddonManager {
         const firstLine = info.code.slice(0, newlineIndex);
         if (!firstLine.includes("/**")) {
             logger.error(`Plugin ${info.file} is missing jsdoc header`);
+            toasts.show(`${info.file} is not a valid BetterDiscord plugin`, { type: "error" });
             return;
         }
 
@@ -98,7 +105,7 @@ export default new class PluginManager extends AddonManager {
         return plugin as BDPlugin;
     }
 
-    startPlugin(plugin: BDPlugin) {
+    startPlugin(plugin: BDPlugin, toast = true) {
         try {
             const start = performance.now();
 
@@ -108,19 +115,27 @@ export default new class PluginManager extends AddonManager {
 
             const end = performance.now();
             logger.log(`Loaded ${plugin.name} in ${(end - start).toFixed(2)}ms`);
+
+            if (toast) toasts.show(`Started BetterDiscord plugin ${plugin.name}`, { type: "success" });
             return true;
         } catch (e) {
             logger.error("Failed to start", plugin.name, e);
+            toasts.show(`Failed to start BetterDiscord plugin ${plugin.name}`, { type: "error" });
             return false;
         }
     }
 
-    stopPlugin(plugin: BDPlugin) {
+    stopPlugin(plugin: BDPlugin, toast = true) {
         try {
             plugin.instance?.stop();
             logger.log(`Stopped ${plugin.name}`);
+
+            if (toast) toasts.show(`Stopped BetterDiscord plugin ${plugin.name}`, { type: "success" });
+            return true;
         } catch (e) {
             logger.error("Failed to stop", plugin.name, e);
+            toasts.show(`Failed to stop BetterDiscord plugin ${plugin.name}`, { type: "error" });
+            return false;
         }
     }
 
@@ -163,6 +178,7 @@ export default new class PluginManager extends AddonManager {
             if (!plugin) return;
 
             if (Settings.bdplugins[plugin.id]) this.startPlugin(plugin);
+            else toasts.show(`Added BetterDiscord plugin ${plugin.name}`, { type: "success" });
 
             this.addonList.push(plugin);
             this.sortAddons();
@@ -188,41 +204,57 @@ export default new class PluginManager extends AddonManager {
         const index = this.addonList.indexOf(plugin);
         if (index === -1) return;
 
-        if (Settings.bdplugins[plugin.id]) this.stopPlugin(plugin);
+        if (Settings.bdplugins[plugin.id]) this.stopPlugin(plugin, false);
         if (removeFile) VencordNative.bd.deletePlugin(plugin.filename);
 
         this.addonList.splice(index, 1);
         this.emitChange();
+
+        toasts.show(`Deleted BetterDiscord plugin ${plugin.name}`, { type: "success" });
     }
 
     sortAddons() {
         this.addonList.sort((a, b) => a.name.localeCompare(b.name));
     }
 
-    enable(plugin: BDPlugin) {
+    enable(plugin: BDPlugin, toast = true) {
         if (Settings.bdplugins[plugin.id]) return;
 
-        const success = this.startPlugin(plugin);
+        const success = this.startPlugin(plugin, toast);
         if (success) Settings.bdplugins[plugin.id] = true;
     }
 
-    disable(plugin: BDPlugin) {
+    disable(plugin: BDPlugin, toast = true) {
         if (!Settings.bdplugins[plugin.id]) return;
 
-        this.stopPlugin(plugin);
+        this.stopPlugin(plugin, toast);
         Settings.bdplugins[plugin.id] = false;
     }
 
     enableAll() {
+        let enabled = 0;
         for (const plugin of this.addonList) {
-            this.enable(plugin);
+            if (Settings.bdplugins[plugin.id]) continue;
+
+            this.enable(plugin, false);
+            enabled++;
         }
+
+        const message = `Enabled ${enabled} BetterDiscord plugin${enabled !== 1 ? "s" : ""}`;
+        toasts.show(message, { type: "success" });
     }
 
     disableAll() {
+        let disabled = 0;
         for (const plugin of this.addonList) {
-            this.disable(plugin);
+            if (!Settings.bdplugins[plugin.id]) continue;
+
+            this.disable(plugin, false);
+            disabled++;
         }
+
+        const message = `Disabled ${disabled} BetterDiscord plugin${disabled !== 1 ? "s" : ""}`;
+        toasts.show(message, { type: "success" });
     }
 
     getPlugin(idOrFile: string) { return this.getAddon(idOrFile); }
