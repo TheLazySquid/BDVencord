@@ -52,6 +52,7 @@ ipcMain.handle(IpcEvents.BD_OPEN_DIALOG, async (event, options) => {
 });
 
 let pluginWatcher: FSWatcher | null = null;
+const fileSet = new Set<string>();
 const ignoreUpdates = new Set<string>();
 ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
     const files = await readdir(BD_PLUGINS_DIR, { withFileTypes: true });
@@ -59,7 +60,9 @@ ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
         .filter(f => f.isFile() && f.name.endsWith(".plugin.js"))
         .map(f => f.name);
 
-    const fileSet = new Set(pluginFiles);
+    fileSet.clear();
+    ignoreUpdates.clear();
+    for (const file of pluginFiles) fileSet.add(file);
 
     // Watch the plugins directory for changes
     if (pluginWatcher) pluginWatcher.close();
@@ -80,6 +83,7 @@ ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
             return;
         }
 
+        if (ignoreUpdates.has(filename)) return;
         if (fileSet.has(filename) && type === "rename") return;
 
         // Read the new/updated plugin
@@ -101,8 +105,6 @@ ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
             ignoreUpdates.add(filename);
             setTimeout(() => ignoreUpdates.delete(filename), 2000);
         } else {
-            if (ignoreUpdates.has(filename)) return;
-
             // Plugin updated, debounce changes
             if (updateTimeouts.has(filename)) clearTimeout(updateTimeouts.get(filename));
             const timeout = setTimeout(() => {
@@ -117,17 +119,27 @@ ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
     return await Promise.all(pluginFiles.map(readPluginFile));
 });
 
-ipcMain.handle(IpcEvents.BD_UPDATE_PLUGIN, async (_, filename: string, code: string) => {
+const writeToFile = async (filename: string, code: string) => {
     const path = join(BD_PLUGINS_DIR, filename);
 
     ignoreUpdates.add(filename);
     setTimeout(() => ignoreUpdates.delete(filename), 2000);
     await writeFile(path, code);
+};
+
+ipcMain.handle(IpcEvents.BD_CREATE_PLUGIN, async (_, filename: string, code: string) => {
+    await writeToFile(filename, code);
+    fileSet.add(filename);
+});
+
+ipcMain.handle(IpcEvents.BD_UPDATE_PLUGIN, async (_, filename: string, code: string) => {
+    await writeToFile(filename, code);
 });
 
 ipcMain.handle(IpcEvents.BD_DELETE_PLUGIN, async (_, filename: string) => {
     const path = join(BD_PLUGINS_DIR, filename);
     await rm(path);
+    fileSet.delete(filename);
 });
 
 ipcMain.handle(IpcEvents.BD_OPEN_PLUGIN_FOLDER, () => shell.openPath(BD_PLUGINS_DIR));

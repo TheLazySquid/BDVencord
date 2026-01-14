@@ -117,6 +117,7 @@ export default {
         getDataDir: () => sendSync<string>(IpcEvents.BD_GET_DATA_DIR),
         deletePlugin: (filename: string) => invoke<void>(IpcEvents.BD_DELETE_PLUGIN, filename),
         updatePlugin: (filename: string, code: string) => invoke<void>(IpcEvents.BD_UPDATE_PLUGIN, filename, code),
+        createPlugin: (filename: string, code: string) => invoke<void>(IpcEvents.BD_CREATE_PLUGIN, filename, code),
         openPluginFolder: () => invoke<void>(IpcEvents.BD_OPEN_PLUGIN_FOLDER),
 
         openDialog: (options: any) => invoke<any>(IpcEvents.BD_OPEN_DIALOG, options),

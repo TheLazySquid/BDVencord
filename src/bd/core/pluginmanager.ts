@@ -61,7 +61,7 @@ export default new class PluginManager extends AddonManager {
     async initialize() {
         const pluginInfo = await VencordNative.bd.getPlugins();
         for (const info of pluginInfo) {
-            const plugin = this.createPlugin(info);
+            const plugin = this.initPlugin(info);
             if (plugin) this.addonList.push(plugin);
         }
         this.sortAddons();
@@ -83,7 +83,7 @@ export default new class PluginManager extends AddonManager {
         this._initResolve?.();
     }
 
-    createPlugin(info: PluginInfo) {
+    initPlugin(info: PluginInfo) {
         // Parse the plugin's metadata
         const newlineIndex = info.code.indexOf("\n");
         const firstLine = info.code.slice(0, newlineIndex);
@@ -178,15 +178,7 @@ export default new class PluginManager extends AddonManager {
         });
 
         VencordNative.bd.addPluginCreateListener((info) => {
-            const plugin = this.createPlugin(info);
-            if (!plugin) return;
-
-            if (Settings.bdplugins[plugin.id]) this.startPlugin(plugin);
-            else toasts.show(`Added BetterDiscord plugin ${plugin.name}`, { type: "success" });
-
-            this.addonList.push(plugin);
-            this.sortAddons();
-            this.emitChange();
+            this.createPlugin(info);
         });
 
         VencordNative.bd.addPluginUpdateListener((info) => {
@@ -223,6 +215,20 @@ export default new class PluginManager extends AddonManager {
 
         if(updateFile) VencordNative.bd.updatePlugin(plugin.filename, newInfo.code);
         toasts.show(`Updated BetterDiscord plugin ${plugin.name}`, { type: "success" });
+    }
+
+    createPlugin(info: PluginInfo, writeFile = false) {
+        const plugin = this.initPlugin(info);
+        if (!plugin) return;
+
+        if (Settings.bdplugins[plugin.id]) this.startPlugin(plugin);
+        else toasts.show(`Added BetterDiscord plugin ${plugin.name}`, { type: "success" });
+
+        this.addonList.push(plugin);
+        this.sortAddons();
+        this.emitChange();
+
+        if (writeFile) VencordNative.bd.createPlugin(plugin.filename, info.code);
     }
 
     sortAddons() {
