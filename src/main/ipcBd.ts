@@ -2,9 +2,8 @@ import { IpcEvents } from "@shared/IpcEvents";
 import { ipcMain, BrowserWindow, dialog, shell } from "electron";
 import { FSWatcher, mkdirSync, watch } from "fs";
 import { BD_PLUGINS_DIR, DATA_DIR } from "./utils/constants";
-import { readdir, readFile, stat, rm } from "fs/promises";
+import { readdir, readFile, stat, rm, writeFile } from "fs/promises";
 import { join } from "path";
-import { debounce } from "@shared/debounce";
 import { PluginInfo } from "bd/core/pluginmanager";
 
 mkdirSync(BD_PLUGINS_DIR, { recursive: true });
@@ -53,6 +52,7 @@ ipcMain.handle(IpcEvents.BD_OPEN_DIALOG, async (event, options) => {
 });
 
 let pluginWatcher: FSWatcher | null = null;
+const ignoreUpdates = new Set<string>();
 ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
     const files = await readdir(BD_PLUGINS_DIR, { withFileTypes: true });
     const pluginFiles = files
@@ -64,7 +64,6 @@ ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
     // Watch the plugins directory for changes
     if (pluginWatcher) pluginWatcher.close();
     const updateTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
-    const ignoredFiles = new Set<string>();
 
     pluginWatcher = watch(BD_PLUGINS_DIR, { persistent: false }, async (type, filename) => {
         if (!filename || !filename.endsWith(".plugin.js")) return;
@@ -99,10 +98,10 @@ ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
             sender.postMessage(IpcEvents.BD_PLUGIN_CREATED, info);
 
             // A few changes event will also be fired, ignore it
-            ignoredFiles.add(filename);
-            setTimeout(() => ignoredFiles.delete(filename), 2000);
+            ignoreUpdates.add(filename);
+            setTimeout(() => ignoreUpdates.delete(filename), 2000);
         } else {
-            if (ignoredFiles.has(filename)) return;
+            if (ignoreUpdates.has(filename)) return;
 
             // Plugin updated, debounce changes
             if (updateTimeouts.has(filename)) clearTimeout(updateTimeouts.get(filename));
@@ -118,8 +117,16 @@ ipcMain.handle(IpcEvents.BD_GET_PLUGINS, async ({ sender }) => {
     return await Promise.all(pluginFiles.map(readPluginFile));
 });
 
-ipcMain.handle(IpcEvents.BD_DELETE_PLUGIN, async (_, file: string) => {
-    const path = join(BD_PLUGINS_DIR, file);
+ipcMain.handle(IpcEvents.BD_UPDATE_PLUGIN, async (_, filename: string, code: string) => {
+    const path = join(BD_PLUGINS_DIR, filename);
+
+    ignoreUpdates.add(filename);
+    setTimeout(() => ignoreUpdates.delete(filename), 2000);
+    await writeFile(path, code);
+});
+
+ipcMain.handle(IpcEvents.BD_DELETE_PLUGIN, async (_, filename: string) => {
+    const path = join(BD_PLUGINS_DIR, filename);
     await rm(path);
 });
 

@@ -47,18 +47,7 @@ import { onceReady } from "./webpack";
 import { SettingsRouter } from "./webpack/common";
 import { patches } from "./webpack/patchWebpack";
 
-import "bd/styles/index.css";
-import "bd/polyfill";
-import { loadModules } from "bd/webpack/modules";
-import { loadStores } from "bd/webpack";
-import DOMManager from "bd/core/dommanager";
-import Modals from "bd/ui/modals";
-import Toasts from "bd/ui/toasts";
-import NotificationUIInstance from "bd/ui/notifications";
-import { MenuPatcher } from "bd/api/contextmenu";
-import CommandManager from "bd/core/commandmanager";
-import BdApi from "bd/api";
-import pluginmanager from "bd/core/pluginmanager";
+import { onDOMReady, onInit, onWebpackReady } from "bd";
 
 if (IS_REPORTER) {
     require("./debug/runReporter");
@@ -163,14 +152,7 @@ async function runUpdateCheck() {
 
 async function init() {
     await onceReady;
-    loadStores();
-    loadModules();
-    MenuPatcher.initialize();
-    Modals.makeStack();
-    Toasts.initialize();
-    NotificationUIInstance.initialize();
-    CommandManager.initialize();
-    pluginmanager.initialize();
+    onWebpackReady();
     startAllPlugins(StartAt.WebpackReady);
 
     syncSettings();
@@ -202,16 +184,11 @@ initPluginManager();
 initStyles();
 startAllPlugins(StartAt.Init);
 init();
-
-Object.defineProperty(window, "BdApi", {
-    value: BdApi,
-    writable: false,
-    configurable: false
-});
+onInit();
 
 document.addEventListener("DOMContentLoaded", () => {
     startAllPlugins(StartAt.DOMContentLoaded);
-    DOMManager.init();
+    onDOMReady();
 
     // FIXME
     if (IS_DISCORD_DESKTOP && Settings.winNativeTitleBar && IS_WINDOWS) {

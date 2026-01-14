@@ -6,7 +6,7 @@ import { parseJSDoc } from "bd/utils/jsdoc";
 import { Settings } from "Vencord";
 import toasts from "bd/stores/toasts";
 
-const logger = new Logger("BD", "#3E82E5");
+const logger = new Logger("PluginManager", "#3E82E5", "BDVencord");
 
 interface PluginMeta {
     added: number;
@@ -55,6 +55,8 @@ export interface PluginInfo {
 export default new class PluginManager extends AddonManager {
     addonFolder = "plugins";
     addonList: BDPlugin[] = [];
+    _initResolve?: () => void;
+    initialized = new Promise<void>(res => this._initResolve = res);
 
     async initialize() {
         const pluginInfo = await VencordNative.bd.getPlugins();
@@ -77,6 +79,8 @@ export default new class PluginManager extends AddonManager {
 
         VencordNative.bd.addSwitchListener(() => this.onSwitch());
         this.watchChanges();
+
+        this._initResolve?.();
     }
 
     createPlugin(info: PluginInfo) {
@@ -187,16 +191,8 @@ export default new class PluginManager extends AddonManager {
 
         VencordNative.bd.addPluginUpdateListener((info) => {
             const oldPlugin = this.getAddon(info.file);
-            if (oldPlugin) this.deletePlugin(oldPlugin);
-
-            const plugin = this.createPlugin(info);
-            if (!plugin) return;
-
-            if (Settings.bdplugins[plugin.id]) this.startPlugin(plugin);
-
-            this.addonList.push(plugin);
-            this.sortAddons();
-            this.emitChange();
+            if (oldPlugin) this.updatePlugin(oldPlugin, info);
+            else this.createPlugin(info);
         });
     }
 
@@ -211,6 +207,22 @@ export default new class PluginManager extends AddonManager {
         this.emitChange();
 
         toasts.show(`Deleted BetterDiscord plugin ${plugin.name}`, { type: "success" });
+    }
+
+    updatePlugin(plugin: BDPlugin, newInfo: PluginInfo, updateFile = false) {
+        plugin.added = newInfo.added;
+        plugin.modified = newInfo.modified;
+        plugin.size = newInfo.size;
+        plugin.fileContent = newInfo.code;
+
+        const enabled = Settings.bdplugins[plugin.id];
+        if (enabled) {
+            this.stopPlugin(plugin, false);
+            this.startPlugin(plugin, false);
+        }
+
+        if(updateFile) VencordNative.bd.updatePlugin(plugin.filename, newInfo.code);
+        toasts.show(`Updated BetterDiscord plugin ${plugin.name}`, { type: "success" });
     }
 
     sortAddons() {
