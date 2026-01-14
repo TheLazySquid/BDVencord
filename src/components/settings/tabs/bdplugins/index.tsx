@@ -152,7 +152,18 @@ function BDPlugins() {
                 {filteredPlugins.length
                     ? filteredPlugins.map(plugin => (
                         <BDPluginCard key={plugin.id} plugin={plugin} />
-                    )) : <Paragraph>No plugins meet the search criteria.</Paragraph>
+                    )) : (
+                        <div className="bd-no-plugins">
+                            {plugins.length > 0 ? (
+                                <Paragraph>No plugins meet the search criteria.</Paragraph>
+                            ) : (
+                                <>
+                                    <Paragraph>You have no BetterDiscord plugins installed.</Paragraph>
+                                    <Paragraph>Use the upload button or drag and drop a .plugin.js file here to install it.</Paragraph>
+                                </>
+                            )}
+                        </div>
+                    )
                 }
             </div>
         </SettingsTab>

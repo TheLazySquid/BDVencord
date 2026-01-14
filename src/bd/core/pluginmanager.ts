@@ -74,8 +74,10 @@ export default new class PluginManager extends AddonManager {
             if (success) started++;
         }
 
-        const message = `Started ${started} BetterDiscord plugin${started !== 1 ? "s" : ""}`;
-        toasts.show(message, { type: "success" });
+        if (started > 0) {
+            const message = `Started ${started} BetterDiscord plugin${started !== 1 ? "s" : ""}`;
+            toasts.show(message, { type: "success" });
+        }
 
         VencordNative.bd.addSwitchListener(() => this.onSwitch());
         this.watchChanges();
@@ -213,7 +215,7 @@ export default new class PluginManager extends AddonManager {
             this.startPlugin(plugin, false);
         }
 
-        if(updateFile) VencordNative.bd.updatePlugin(plugin.filename, newInfo.code);
+        if (updateFile) VencordNative.bd.updatePlugin(plugin.filename, newInfo.code);
         toasts.show(`Updated BetterDiscord plugin ${plugin.name}`, { type: "success" });
     }
 

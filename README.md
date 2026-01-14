@@ -17,11 +17,9 @@ Restart Discord and you should be good to go.
 
 ## Usage
 
-There is currently no way to install BetterDiscord plugins from within Discord. Instead, you will need to manually place the `.plugin.js` files your `Vencord/plugins` folder. You can find the plugins folder by going to the "BD Plugins" tab in settings and pressing the "Open Plugin Folder" button.
+There is currently no way to install BetterDiscord plugins from within Discord. Instead, you will need to download `.plugin.js` files from the [BetterDiscord site](https://betterdiscord.app/plugins) and the drag and drop or upload them on the "BD Plugins" tab in settings. You can also manually place them in your `Vencord/plugins` folder, which can be found with the "Open Plugins Folder" button at the top of the BD Plugins tab in settings.
 
 Plugins need to be enabled from inside the BD Plugins tab in settings. Their settings can also be accessed there.
-
-BetterDiscord plugins can be downloaded from the [BetterDiscord site](https://betterdiscord.app/plugins).
 
 ## Compatibility
 
