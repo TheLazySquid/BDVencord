@@ -25,7 +25,6 @@ import VencordNative, { invoke, sendSync } from "./VencordNative";
 
 contextBridge.exposeInMainWorld("VencordNative", VencordNative);
 contextBridge.exposeInMainWorld("BDRemote", BDRemote);
-contextBridge.exposeInMainWorld("process", process);
 
 // Discord
 if (location.protocol !== "data:") {
@@ -36,6 +35,8 @@ if (location.protocol !== "data:") {
         // Not supported in sandboxed preload scripts but Discord doesn't support it either so who cares
         require(process.env.DISCORD_PRELOAD!);
     }
+
+    contextBridge.exposeInMainWorld("process", process);
 } // Monaco popout
 else {
     contextBridge.exposeInMainWorld("setCss", debounce(VencordNative.quickCss.set));
