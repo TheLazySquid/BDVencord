@@ -11,7 +11,7 @@ export interface CheckboxProps {
     inputClassName?: string,
     iconClassName?: string,
     id?: string,
-    label?: string,
+    label?: React.ReactElement | string,
     labelClassName?: string,
     disabled?: boolean,
     reverse?: boolean;
@@ -46,7 +46,7 @@ export default function CheckBox(props: CheckboxProps) {
                 <LucideIcon icon={Check} size={18} />
             </div>
             {props.label && (
-                <div className={clsx("bd-checkbox-label", props.label)}>{props.label}</div>
+                <div className={clsx("bd-checkbox-label")}>{props.label}</div>
             )}
         </Flex>
     );

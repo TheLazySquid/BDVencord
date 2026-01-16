@@ -8,7 +8,7 @@ import toasts from "bd/stores/toasts";
 
 const logger = new Logger("PluginManager", "#3E82E5", "BDVencord");
 
-interface PluginMeta {
+export interface PluginMeta {
     added: number;
     author: string;
     authorId?: string;
@@ -204,6 +204,8 @@ export default new class PluginManager extends AddonManager {
     }
 
     updatePlugin(plugin: BDPlugin, newInfo: PluginInfo, updateFile = false) {
+        if (plugin.fileContent === newInfo.code) return;
+
         plugin.added = newInfo.added;
         plugin.modified = newInfo.modified;
         plugin.size = newInfo.size;
@@ -219,11 +221,12 @@ export default new class PluginManager extends AddonManager {
         toasts.show(`Updated BetterDiscord plugin ${plugin.name}`, { type: "success" });
     }
 
-    createPlugin(info: PluginInfo, writeFile = false) {
+    createPlugin(info: PluginInfo, enable = false, writeFile = false) {
         const plugin = this.initPlugin(info);
         if (!plugin) return;
 
         if (Settings.bdplugins[plugin.id]) this.startPlugin(plugin);
+        else if (enable) this.enable(plugin);
         else toasts.show(`Added BetterDiscord plugin ${plugin.name}`, { type: "success" });
 
         this.addonList.push(plugin);

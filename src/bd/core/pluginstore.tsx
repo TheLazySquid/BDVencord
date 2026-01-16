@@ -71,7 +71,7 @@ export default class PluginStore {
                 </ul>
             ],
             type: "info",
-            icon: () => <BDLogo />,
+            icon: () => <BDLogo accent={true} />,
             duration: Infinity,
             actions: [
                 {

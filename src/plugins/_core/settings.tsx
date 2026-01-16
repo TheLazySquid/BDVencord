@@ -25,6 +25,7 @@ import { isTruthy } from "@utils/guards";
 import definePlugin, { IconProps, OptionType } from "@utils/types";
 import { waitFor } from "@webpack";
 import { React } from "@webpack/common";
+import { BDLogo } from "bd/ui/icons";
 import type { ComponentType, PropsWithChildren, ReactNode } from "react";
 
 import gitHash from "~git-hash";
@@ -243,7 +244,7 @@ export default definePlugin({
                 key: "bd_plugins",
                 title: "BD Plugins",
                 Component: BDPluginsTab,
-                Icon: PluginsIcon
+                Icon: BDLogo
             }),
             buildEntry({
                 key: "vencord_themes",

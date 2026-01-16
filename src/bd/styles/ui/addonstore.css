@@ -268,10 +268,6 @@ img:where(.bd-addon-store-card-preview-img, .bd-install-modal-preview-img)[src="
   object-fit: contain;
 }
 
-.bd-addon-store-card:last-child:nth-child(odd):not(.bd-addon-store-card-embed) {
-  margin-left: calc(50% + 10px);
-}
-
 .bd-addon-title {
   display: flex;
   align-items: center;

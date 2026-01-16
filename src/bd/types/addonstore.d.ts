@@ -11,8 +11,8 @@ export interface BdWebAddon {
     tags: string[];
     thumbnail_url?: string;
     latest_source_url: string;
-    initial_release_date: Date;
-    latest_release_date: Date;
+    initial_release_date: string;
+    latest_release_date: string;
     guild: BdWebGuild | null;
 }
 

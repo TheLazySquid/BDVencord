@@ -1,0 +1,5 @@
+.bd-plugin-store-cards {
+    display: grid;
+    gap: 16px;
+    grid-template-columns: 320px 320px;
+}

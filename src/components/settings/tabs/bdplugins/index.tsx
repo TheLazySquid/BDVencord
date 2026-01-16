@@ -15,13 +15,33 @@ import { useStateFromStores } from "bd/ui/hooks";
 import DiscordModules from "bd/webpack/modules";
 import { Flex } from "@components/Flex";
 import { LucideIcon } from "bd/ui/icons";
-import { Folder, Check, X, IconNode, FileUp } from "lucide";
+import { Folder, Check, X, IconNode, FileUp, Store, ChevronRight } from "lucide";
 import toasts from "bd/stores/toasts";
+import { Card } from "@components/Card";
+import { openPluginStore } from "./Store";
+import { confirmFileInstall } from "./InstallPopup";
 
 interface ActionButtonProps {
     title: string;
     icon: IconNode;
     onClick: () => void;
+}
+
+function StoreCard() {
+    return (
+        <Card className="bd-store-card" onClick={() => openPluginStore()}>
+            <div className="bd-store-card-icon">
+                <LucideIcon icon={Store} size="24px" />
+            </div>
+            <div className="bd-store-card-body">
+                <div>Open BetterDiscord plugin store</div>
+                <div>Browse official BetterDiscord plugins</div>
+            </div>
+            <div className="bd-store-card-caret">
+                <LucideIcon icon={ChevronRight} size="24px" />
+            </div>
+        </Card>
+    );
 }
 
 function ActionButton({ title, icon, onClick }: ActionButtonProps) {
@@ -59,27 +79,6 @@ function BDPlugins() {
         );
     });
 
-    const createPlugins = async (fileList: FileList) => {
-        const files = Array.from(fileList).filter(f => f.name.endsWith(".plugin.js"));
-        if (files.length === 0) {
-            toasts.show("Uploaded file is not a valid BetterDiscord plugin.", { type: "error" });
-            return;
-        }
-
-        // Read and create the plugins
-        for (const file of files) {
-            const code = await file.text();
-
-            pluginmanager.createPlugin({
-                added: Date.now(),
-                modified: Date.now(),
-                code,
-                file: file.name,
-                size: file.size
-            }, true);
-        }
-    };
-
     const uploadPlugin = () => {
         const input = document.createElement("input");
         input.type = "file";
@@ -89,7 +88,7 @@ function BDPlugins() {
         input.onchange = () => {
             if (!input.files) return;
 
-            createPlugins(input.files);
+            confirmFileInstall(input.files);
         };
 
         input.click();
@@ -102,8 +101,7 @@ function BDPlugins() {
         e.preventDefault();
         setDragCounter(0);
 
-        if (e.dataTransfer.files.length === 0) return;
-        createPlugins(e.dataTransfer.files);
+        confirmFileInstall(e.dataTransfer.files);
     };
 
     return (
@@ -114,6 +112,8 @@ function BDPlugins() {
                 <ActionButton title="Disable All" icon={X} onClick={() => pluginmanager.disableAll()} />
                 <ActionButton title="Upload Plugin" icon={FileUp} onClick={uploadPlugin} />
             </Flex>
+
+            <StoreCard />
 
             <HeadingTertiary className={classes(Margins.top20, Margins.bottom8)}>
                 Filters
