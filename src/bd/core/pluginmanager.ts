@@ -353,8 +353,9 @@ export default new class PluginManager extends AddonManager {
 
     onMutation(mutation: MutationRecord) {
         for (const plugin of this.addonList) {
+            if (typeof plugin.instance?.observer !== "function") continue;
             try {
-                plugin.instance?.observer?.(mutation);
+                plugin.instance.observer(mutation);
             } catch (e) {
                 console.error("plugin observer failed for " + plugin.name, e);
             }
