@@ -134,6 +134,18 @@ const patchCsp = (headers: PolicyMap) => {
 
 export function initCsp() {
     session.defaultSession.webRequest.onHeadersReceived(({ responseHeaders, resourceType }, cb) => {
+        // BDVencord needs to fully remove the CSP for compatibility
+        if (!responseHeaders) return cb({ cancel: false });
+
+        const headers = Object.keys(responseHeaders);
+        for (let h = 0; h < headers.length; h++) {
+            const key = headers[h];
+            if (key.toLowerCase().indexOf("content-security-policy") !== 0) continue;
+            delete responseHeaders[key];
+        }
+        cb({ cancel: false, responseHeaders });
+
+        /*
         if (responseHeaders) {
             if (resourceType === "mainFrame")
                 patchCsp(responseHeaders);
@@ -148,6 +160,7 @@ export function initCsp() {
         }
 
         cb({ cancel: false, responseHeaders });
+        */
     });
 
     // assign a noop to onHeadersReceived to prevent other mods from adding their own incompatible ones.
