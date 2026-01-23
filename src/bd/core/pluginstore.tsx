@@ -45,7 +45,7 @@ export default class PluginStore {
             if (!storePlugin) continue;
 
             // Check if a new version is available
-            if (!semverRegex.test(storePlugin.version) || !semverRegex.test(plugin.version)) return;
+            if (!semverRegex.test(storePlugin.version) || !semverRegex.test(plugin.version)) continue;
             const comparison = comparator(plugin.version, storePlugin.version);
             if (comparison !== 1) continue;
 
@@ -65,6 +65,7 @@ export default class PluginStore {
                     {updatable.map((filename) =>
                         <li>
                             {this.plugins[filename].name}
+                            {" "}
                             <i>({this.plugins[filename].version})</i>
                         </li>
                     )}
