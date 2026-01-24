@@ -214,6 +214,7 @@ export default new class PluginManager extends AddonManager {
         const enabled = Settings.bdplugins[plugin.id];
         if (enabled) {
             this.stopPlugin(plugin, false);
+            plugin.instance = undefined;
             this.startPlugin(plugin, false);
         }
 
