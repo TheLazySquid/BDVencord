@@ -255,6 +255,17 @@ export default new class PluginManager extends AddonManager {
         Settings.bdplugins[plugin.id] = false;
     }
 
+    toggle(plugin: BDPlugin) {
+        if (Settings.bdplugins[plugin.id]) {
+            this.stopPlugin(plugin);
+        } else {
+            const success = this.startPlugin(plugin);
+            if (!success) return;
+        }
+
+        Settings.bdplugins[plugin.id] = !Settings.bdplugins[plugin.id];
+    }
+
     enableAll() {
         let enabled = 0;
         for (const plugin of this.addonList) {
@@ -305,16 +316,7 @@ export default new class PluginManager extends AddonManager {
 
     toggleAddon(idOrAddon: string) {
         const plugin = this.getAddon(idOrAddon);
-        if (!plugin) return;
-
-        if (Settings.bdplugins[plugin.id]) {
-            this.stopPlugin(plugin);
-        } else {
-            const success = this.startPlugin(plugin);
-            if (!success) return;
-        }
-
-        Settings.bdplugins[plugin.id] = !Settings.bdplugins[plugin.id];
+        if (plugin) this.toggle(plugin);
     }
 
     reloadAddon(idOrAddon: string) {
