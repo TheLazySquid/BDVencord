@@ -487,6 +487,44 @@ function runFactoryWithWrap(patchedFactory: PatchedModuleFactory, thisArg: unkno
     return factoryReturn;
 }
 
+const IS_CLASSNAME_MODULE = /^\d+(?:e\d+)?\((.{1,3}),.{1,3},.{1,3}\){("use strict";)?\1.exports={.+}}$/;
+const EXTRACT_CLASS = /^(.+?)_/;
+
+function demangleClassModule(newValue: AnyModuleFactory) {
+    if (!IS_CLASSNAME_MODULE.test(String(newValue))) return newValue;
+
+    function className(this: any, module: any, exports: any, _require: any) {
+        newValue.call(this, module, exports, _require);
+
+        const definers: PropertyDescriptorMap = {
+            [Symbol.for("BetterDiscord.Polyfilled.class")]: {
+                value: true
+            }
+        };
+
+        for (const key in module.exports) {
+            if (!Object.hasOwn(module.exports, key)) continue;
+
+            const element = module.exports[key];
+
+            if (typeof element === "string") {
+                const match = element.match(EXTRACT_CLASS);
+
+                if (!match) continue;
+                if (match[1] in module.exports) continue;
+
+                definers[match[1]] = { value: element };
+            }
+        }
+
+        Object.defineProperties(module.exports, definers);
+    }
+
+    className.toString = newValue.toString;
+
+    return className;
+}
+
 /**
  * Patches a module factory.
  *
@@ -495,6 +533,8 @@ function runFactoryWithWrap(patchedFactory: PatchedModuleFactory, thisArg: unkno
  * @returns The patched module factory
  */
 function patchFactory(moduleId: PropertyKey, originalFactory: AnyModuleFactory): PatchedModuleFactory {
+    originalFactory = demangleClassModule(originalFactory);
+
     const originalFactoryCode = String(originalFactory);
     const isArrowFunction = originalFactoryCode.startsWith("(");
 
