@@ -17,7 +17,7 @@ interface ModuleQueries {
     createBotMessage: any;
     Messages: any;
     Icons: any;
-    Sidebar: { Z(p: { sections: any[]; }): void; };
+    Sidebar: { A(p: { sections: any[]; }): void; };
     AccessibilityContext: React.Context<{ reducedMotion: { enabled: false; }; }>;
     Anims: any;
     FocusLock: any;
@@ -61,7 +61,8 @@ export function loadModules() {
         Dispatcher: {
             filter: Filters.byKeys(["dispatch", "subscribe", "register"]),
             firstId: 570140,
-            cacheId: "core-Dispatcher"
+            cacheId: "core-Dispatcher",
+            searchExports: true
         },
         RemoteModule: {
             filter: Filters.byKeys(["setBadge"]),

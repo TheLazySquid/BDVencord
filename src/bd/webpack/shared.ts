@@ -35,8 +35,8 @@ export function shouldSkipModule(exports: any) {
 }
 
 export function getDefaultKey(module: Webpack.Module): Webpack.DefaultKey | undefined {
-    if ("Z" in module.exports) return "Z";
-    if ("ZP" in module.exports) return "ZP";
+    if ("A" in module.exports) return "A";
+    if ("Ay" in module.exports) return "Ay";
     if (module.exports.__esModule && "default" in module.exports) return "default";
 }
 

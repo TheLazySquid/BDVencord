@@ -139,6 +139,58 @@ export function _initWebpack(webpackRequire: WebpackRequire) {
         }
     };
 
+    const IS_CLASSNAME_MODULE = /^\d+(?:e\d+)?\((.{1,3}),.{1,3},.{1,3}\){("use strict";)?\1.exports={.+}}$/;
+    const EXTRACT_CLASS = /^(.+?)_/;
+
+    function setter(newValue: any) {
+        if (IS_CLASSNAME_MODULE.test(String(newValue))) {
+            function className(this: any, module: any, exports: any, _require: any) {
+                newValue.call(this, module, exports, _require);
+
+                const definers: PropertyDescriptorMap = {
+                    [Symbol.for("BetterDiscord.Polyfilled.class")]: {
+                        value: true
+                    }
+                };
+
+                for (const key in module.exports) {
+                    if (!Object.hasOwn(module.exports, key)) continue;
+
+                    const element = module.exports[key];
+
+                    if (typeof element === "string") {
+                        const match = element.match(EXTRACT_CLASS);
+
+                        if (!match) continue;
+                        if (match[1] in module.exports) continue;
+
+                        definers[match[1]] = { value: element };
+                    }
+                }
+
+                Object.defineProperties(module.exports, definers);
+            }
+
+            className.toString = newValue.toString;
+
+            return className;
+        }
+
+        return newValue;
+    }
+
+    for (const key in wreq.m) {
+        if (!Object.hasOwn(wreq.m, key)) continue;
+
+        wreq.m[key] = setter(wreq.m[key]);
+    }
+
+    wreq.m = new Proxy(wreq.m, {
+        set(target, p, newValue, receiver) {
+            return Reflect.set(target, p, setter(newValue), receiver);
+        },
+    });
+
     Reflect.defineProperty(webpackRequire.c, Symbol.toStringTag, {
         value: "ModuleCache",
         configurable: true,

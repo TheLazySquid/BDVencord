@@ -147,7 +147,7 @@ class CommandManager {
     }
 
     static #patchSidebarModule() {
-        Patcher.after("CommandManager", DiscordModules.Sidebar, "Z", (_, [props]: [{ sections: any[]; }], res: any) => {
+        Patcher.after("CommandManager", DiscordModules.Sidebar, "A", (_, [props]: [{ sections: any[]; }], res: any) => {
             if (!this.#sections.size) return;
 
             const child = res.props.children;
