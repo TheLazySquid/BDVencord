@@ -2,6 +2,7 @@ import ContextMenuPatcher from "bd/api/contextmenu";
 import pluginmanager from "./pluginmanager";
 import { openPluginModal } from "@components/settings/tabs/bdplugins/PluginModal";
 import { useSettings } from "@api/Settings";
+import { openPluginStore } from "@components/settings/tabs/bdplugins/Store";
 
 type ContextMenuType = ContextMenuPatcher & {
     Separator: any;
@@ -16,7 +17,7 @@ type ContextMenuType = ContextMenuPatcher & {
 function usePluginToggles({ ContextMenu }: { ContextMenu: ContextMenuType; }) {
     const settings = useSettings([`bdplugins.*`]);
 
-    const toggles = pluginmanager.addonList.map((plugin) => (
+    const items = pluginmanager.addonList.map((plugin) => (
         <ContextMenu.CheckboxItem
             label={plugin.name}
             id={`plugin-${plugin.id}`}
@@ -36,7 +37,16 @@ function usePluginToggles({ ContextMenu }: { ContextMenu: ContextMenuType; }) {
         />
     ));
 
-    return toggles;
+    items.push(
+        <ContextMenu.Item
+            label="View plugin store"
+            id="no-plugins"
+            key="no-plugins"
+            action={openPluginStore}
+        />
+    )
+
+    return items;
 }
 
 export function patchSettingsContextMenu() {
