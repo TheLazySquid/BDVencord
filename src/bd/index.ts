@@ -12,7 +12,7 @@ import CommandManager from "bd/core/commandmanager";
 import BdApi from "bd/api";
 import pluginmanager from "bd/core/pluginmanager";
 import PluginStore from "./core/pluginstore";
-import BDContextMenu from "./core/contextmenu";
+import { patchSettingsContextMenu } from "./core/contextmenu";
 
 export function onInit() {
     Object.defineProperty(window, "BdApi", {
@@ -36,5 +36,5 @@ export function onWebpackReady() {
     CommandManager.initialize();
     pluginmanager.initialize();
     PluginStore.init();
-    BDContextMenu.init();
+    patchSettingsContextMenu();
 }
