@@ -25,8 +25,9 @@ import { React } from "@webpack/common";
 const queue: Array<() => void> = [];
 
 interface ModalActions {
-    openModal: (e: (p?: any) => ReactNode, o?: object) => string | number;
-    closeModal: (key: string | number) => void;
+    openModal(e: (p?: any) => ReactNode, o?: object): string | number;
+    closeModal(key: string | number): void;
+    closeAllModals(): void;
 }
 
 export default class Modals {
@@ -36,9 +37,13 @@ export default class Modals {
 
     static _ModalActions: ModalActions;
     static get ModalActions() {
-        return this._ModalActions ??= getMangled("onCloseRequest:null!=", {
-            openModal: Filters.byStrings("onCloseRequest:null!="),
-            closeModal: Filters.byStrings(".setState", ".getState()[")
+        return this._ModalActions ??= getMangled("?.stackNextByDefault", {
+            openModal: Filters.byStrings("?.stackNextByDefault"),
+            closeModal: Filters.byStrings(".setState", ".getState()["),
+            closeAllModals: Filters.byStrings(".getState();for")
+        }, {
+            firstId: 192308,
+            cacheId: "betterdiscord-modals"
         }) as ModalActions;
     }
 
