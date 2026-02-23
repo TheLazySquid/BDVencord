@@ -1,3 +1,4 @@
+import NodePatcher from "../core/nodepatcher";
 import { React } from "@webpack/common";
 import type ReactType from "react";
 
@@ -120,6 +121,7 @@ interface ReactUtils {
     ): ReactType.FunctionComponent<ReactType.ComponentProps<T>>;
     // forceUpdateFiber(fiber: any): boolean;
     getType<T extends ReactType.FC>(elementType: ElementType<T>): T;
+    createNodePatcher(): NodePatcher;
 }
 
 /**
@@ -313,6 +315,9 @@ const ReactUtils: ReactUtils = {
                     return elementType as T;
             }
         }
+    },
+    createNodePatcher() {
+        return new NodePatcher();
     }
 };
 
