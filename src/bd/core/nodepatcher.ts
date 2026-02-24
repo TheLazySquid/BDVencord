@@ -1,4 +1,4 @@
-import React from "react";
+import { React } from "@webpack/common";
 import ReactUtils from "../api/reactutils";
 
 // type FunctionPatch<P> = (props: P, res: React.ReactNode) => React.ReactNode;
