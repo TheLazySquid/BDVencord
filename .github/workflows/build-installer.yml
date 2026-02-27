@@ -45,14 +45,14 @@ jobs:
 
       - name: Update executable
         run: |
-          chmod +x VencordInstallerCli-linux
+          chmod +x installer/VencordInstallerCli-linux
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: VencordInstaller-linux
           path: |
-            VencordInstallerCli-linux
+            installer/VencordInstallerCli-linux
 
 
   build-mac:
