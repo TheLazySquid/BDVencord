@@ -184,17 +184,17 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: VencordInstaller-linux
-          path: dist
+          path: installer/dist
 
       - uses: actions/download-artifact@v4
         with:
           name: VencordInstaller-macos
-          path: dist
+          path: installer/dist
 
       - uses: actions/download-artifact@v4
         with:
           name: VencordInstaller-windows
-          path: dist
+          path: installer/dist
 
       - name: Create the release
         if: github.repository == 'TheLazySquid/BDVencord'
