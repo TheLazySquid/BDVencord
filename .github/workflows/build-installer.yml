@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - installer/**
+      - .github/workflows/build-installer.yml
   workflow_dispatch:
 
 env:
