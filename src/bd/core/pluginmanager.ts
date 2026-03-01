@@ -53,7 +53,7 @@ export interface PluginInfo {
 }
 
 export default new class PluginManager extends AddonManager {
-    addonFolder = "plugins";
+    addonFolder = BD_PLUGINS_DIR;
     addonList: BDPlugin[] = [];
     _initResolve?: () => void;
     initialized = new Promise<void>(res => this._initResolve = res);
