@@ -116,7 +116,7 @@ function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginMo
                     <Text>{plugin.author}</Text>
                 </section>
 
-                <section>
+                <section className="bd-plugin-settings">
                     <Text variant="heading-lg/semibold" className={classes(Margins.top16, Margins.bottom8)}>Settings</Text>
                     <ErrorBoundary noop>
                         {getSettings()}
