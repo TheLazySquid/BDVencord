@@ -44,7 +44,7 @@ function usePluginToggles({ ContextMenu }: { ContextMenu: ContextMenuType; }) {
             key="no-plugins"
             action={openPluginStore}
         />
-    )
+    );
 
     return items;
 }
@@ -52,8 +52,8 @@ function usePluginToggles({ ContextMenu }: { ContextMenu: ContextMenuType; }) {
 export function patchSettingsContextMenu() {
     const ContextMenu = new ContextMenuPatcher() as ContextMenuType;
 
-    ContextMenu.patch("user-settings-cog", (retVal: any) => {
-        const items = retVal.props?.children?.props?.children?.[0];
+    ContextMenu.patch("settings-menu", (retVal: any) => {
+        const items = retVal.props?.children?.[0];
         if (!items) return;
 
         const pluginToggles = usePluginToggles({ ContextMenu });
