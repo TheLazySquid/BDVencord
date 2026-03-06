@@ -3,6 +3,7 @@ import pluginmanager from "./pluginmanager";
 import { openPluginModal } from "@components/settings/tabs/bdplugins/PluginModal";
 import { useSettings } from "@api/Settings";
 import { openPluginStore } from "@components/settings/tabs/bdplugins/Store";
+import findInTree from "bd/utils/findintree";
 
 type ContextMenuType = ContextMenuPatcher & {
     Separator: any;
@@ -53,18 +54,15 @@ export function patchSettingsContextMenu() {
     const ContextMenu = new ContextMenuPatcher() as ContextMenuType;
 
     ContextMenu.patch("settings-menu", (retVal: any) => {
-        const items = retVal.props?.children?.[0];
-        if (!items) return;
+        const element = findInTree(retVal, (e) => e.key === "bd_plugins", { walkable: ["props", "children"] });
+        if (!element) return;
 
         const pluginToggles = usePluginToggles({ ContextMenu });
 
-        items.push(ContextMenu.buildItem({ type: "separator" }));
-        items.push(
-            <ContextMenu.Item label="BD Plugins" id="bd-plugins">
-                <ContextMenu.Group key="bd-plugins-group">
-                    {pluginToggles}
-                </ContextMenu.Group>
-            </ContextMenu.Item>
+        element.props.children = (
+            <ContextMenu.Group key="bd-plugins-group">
+                {pluginToggles}
+            </ContextMenu.Group>
         );
     });
 }
