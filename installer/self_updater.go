@@ -31,17 +31,17 @@ func init() {
 	go DeleteOldExecutable()
 
 	go func() {
-		Log.Debug("Checking for Installer Updates...")
+		// Log.Debug("Checking for Installer Updates...")
 
-		res, err := GetGithubRelease(InstallerReleaseUrl, InstallerReleaseUrl)
-		if err != nil {
-			Log.Warn("Failed to check for self updates:", err)
-			SelfUpdateCheckDoneChan <- false
-		} else {
-			IsSelfOutdated = res.TagName != buildinfo.InstallerTag
-			Log.Debug("Is self outdated?", IsSelfOutdated)
-			SelfUpdateCheckDoneChan <- true
-		}
+		// res, err := GetGithubRelease(InstallerReleaseUrl, InstallerReleaseUrl)
+		// if err != nil {
+		// 	Log.Warn("Failed to check for self updates:", err)
+		// 	SelfUpdateCheckDoneChan <- false
+		// } else {
+		// 	IsSelfOutdated = res.TagName != buildinfo.InstallerTag
+		// 	Log.Debug("Is self outdated?", IsSelfOutdated)
+		// 	SelfUpdateCheckDoneChan <- true
+		// }
 	}()
 }
 
