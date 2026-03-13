@@ -5,16 +5,7 @@ BDVencord is a modified version of [Vencord](https://vencord.dev/) which is capa
 
 ## Installation
 
-Right now BDVencord is still in early development, so you will need to build from source to use it.
-
-1. Make sure you have [git](https://git-scm.com/), [Node.js](https://nodejs.org/), and [pnpm](https://pnpm.io/)
-2. Clone this repository using git
-3. cd into the cloned repo
-4. run `pnpm install`
-5. run `pnpm build`
-6. run `pnpm inject`
-
-Restart Discord and you should be good to go.
+You can download the installer for your respective platform in the [Installer Release](https://github.com/TheLazySquid/BDVencord/releases/tag/installer). The installer is currently a lightly modified version of the Vencord installer, which will install BDVencord despite looking the same. You can also [build from source](#building-from-source).
 
 ## Usage
 
@@ -27,3 +18,14 @@ Plugins can be enabled/disabled from inside the BD Plugins tab in settings. Thei
 ## Compatibility
 
 BDVencord aims for 100% compatibility with BetterDiscord plugins. If you find any incompatibilities, please open an issue.
+
+## Building from source
+
+1. Make sure you have [git](https://git-scm.com/), [Node.js](https://nodejs.org/), and [pnpm](https://pnpm.io/)
+2. Clone this repository using git
+3. cd into the cloned repo
+4. run `pnpm install`
+5. run `pnpm build`
+6. run `pnpm inject`
+
+Restart Discord and you should be good to go.
