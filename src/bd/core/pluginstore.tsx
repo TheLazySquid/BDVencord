@@ -1,7 +1,7 @@
 import { Logger } from "@utils/Logger";
 import toasts from "bd/stores/toasts";
 import { BdWebAddon } from "bd/types/addonstore";
-import pluginmanager, { PluginInfo } from "./pluginmanager";
+import pluginmanager from "./pluginmanager";
 import { comparator, regex as semverRegex } from "bd/structs/semver";
 import Notifications from "bd/ui/notifications";
 import { React } from "@webpack/common";
@@ -15,10 +15,18 @@ export default class PluginStore {
     static plugins: Record<string, BdWebAddon> = {};
 
     static async init() {
+        await this.fetchAndUpdate();
+
+        const interval = 1000 * 60 * 60 * 5; // 5 hours
+        setInterval(() => this.fetchAndUpdate(), interval);
+    }
+
+    static async fetchAndUpdate() {
         try {
             const plugins: BdWebAddon[] = await this.fetchStore();
             logger.info(`Fetched ${plugins.length} plugins from store`);
 
+            this.plugins = {};
             for (const plugin of plugins) {
                 this.plugins[plugin.file_name] = plugin;
             }
