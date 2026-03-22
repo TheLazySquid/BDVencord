@@ -206,6 +206,11 @@ export default new class PluginManager extends AddonManager {
     updatePlugin(plugin: BDPlugin, newInfo: PluginInfo, updateFile = false) {
         if (plugin.fileContent === newInfo.code) return;
 
+        const headers = parseJSDoc(newInfo.code);
+        for(const key in headers) {
+            plugin[key] = headers[key];
+        }
+
         plugin.added = newInfo.added;
         plugin.modified = newInfo.modified;
         plugin.size = newInfo.size;
