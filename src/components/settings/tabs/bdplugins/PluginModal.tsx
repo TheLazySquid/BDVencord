@@ -2,14 +2,14 @@ import "./PluginModal.css";
 import { Margins } from "@components/margins";
 import { ModalCloseButton, ModalContent, ModalHeader, ModalProps, ModalRoot, ModalSize, openModal } from "@utils/modal";
 import { Forms, React, Text, Tooltip } from "@webpack/common";
-import { BDPlugin } from "bd/core/pluginmanager";
+import { BDPlugin } from "@bd/core/pluginmanager";
 import { Flex } from "@components/Flex";
 import { classes } from "@utils/misc";
 import type { RefObject } from "react";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { DonateButton, GithubButton, PatreonButton, SupportServerIcon, WebsiteButton } from "../plugins/LinkIconButton";
 import { classNameFactory } from "@utils/css";
-import Modals from "bd/ui/modals";
+import Modals from "@bd/ui/modals";
 
 const cl = classNameFactory("vc-plugin-modal-");
 

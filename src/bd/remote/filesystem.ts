@@ -1,6 +1,6 @@
 import * as fs from "fs";
-import clone from "bd/utils/clone";
-import Logger from "bd/core/logger";
+import clone from "../utils/clone";
+import Logger from "../core/logger";
 
 
 // TODO: this whole file could use better typing

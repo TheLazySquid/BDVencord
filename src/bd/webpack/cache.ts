@@ -1,4 +1,4 @@
-import { DATA_DIR } from "bd/consts";
+import { DATA_DIR } from "@bd/consts";
 import fs from "../polyfill/fs";
 import Remote from "../polyfill/remote";
 

@@ -2,11 +2,11 @@ import "./Store.css";
 import { Margins } from "@components/margins";
 import { ModalCloseButton, ModalContent, ModalHeader, ModalProps, ModalRoot, ModalSize, openModal } from "@utils/modal";
 import { React, Select, Text, TextInput, useState } from "@webpack/common";
-import PluginStore from "bd/core/pluginstore";
+import PluginStore from "@bd/core/pluginstore";
 import PluginStoreCard from "./StoreCard";
-import Paginator from "bd/ui/misc/paginator";
+import Paginator from "@bd/ui/misc/paginator";
 import { classes } from "@utils/misc";
-import pluginmanager from "bd/core/pluginmanager";
+import pluginmanager from "@bd/core/pluginmanager";
 import { Paragraph } from "@components/Paragraph";
 
 const pageSize = 20;

@@ -21,6 +21,7 @@
         "jsx": "preserve",
 
         "paths": {
+            "@bd/*": ["./src/bd/*"],
             "@main/*": ["./src/main/*"],
             "@api/*": ["./src/api/*"],
             "@components/*": ["./src/components/*"],

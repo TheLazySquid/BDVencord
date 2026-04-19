@@ -1,5 +1,5 @@
-import {React} from "@webpack/common";
-import {none, GetSettingsContext} from "bd/ui/contexts";
+import { React } from "@webpack/common";
+import { none, GetSettingsContext } from "@bd/ui/contexts";
 
 
 export interface SwitchProps {
@@ -10,11 +10,11 @@ export interface SwitchProps {
     internalState?: boolean;
 }
 
-export default function Switch({id = undefined, value: initialValue, disabled = undefined, onChange, internalState = true}: SwitchProps) {
-    const {useState, useCallback, useContext} = React;
+export default function Switch({ id = undefined, value: initialValue, disabled = undefined, onChange, internalState = true }: SwitchProps) {
+    const { useState, useCallback, useContext } = React;
 
     const [checked, setChecked] = useState(initialValue);
-    const {value: contextValue, disabled: contextDisable} = useContext(GetSettingsContext());
+    const { value: contextValue, disabled: contextDisable } = useContext(GetSettingsContext());
 
     const shouldUseContext = contextValue !== none;
     const isChecked = (shouldUseContext ? contextValue : internalState ? checked : initialValue) as boolean;

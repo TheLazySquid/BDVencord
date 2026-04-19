@@ -1,12 +1,12 @@
 import { Logger } from "@utils/Logger";
-import toasts from "bd/stores/toasts";
-import { BdWebAddon } from "bd/types/addonstore";
+import toasts from "@bd/stores/toasts";
+import { BdWebAddon } from "@bd/types/addonstore";
 import pluginmanager from "./pluginmanager";
-import { comparator, regex as semverRegex } from "bd/structs/semver";
-import Notifications from "bd/ui/notifications";
+import { comparator, regex as semverRegex } from "@bd/structs/semver";
+import Notifications from "@bd/ui/notifications";
 import { React } from "@webpack/common";
-import { BDLogo } from "bd/ui/icons";
-import fetch from "bd/api/fetch";
+import { BDLogo } from "@bd/ui/icons";
+import fetch from "@bd/api/fetch";
 
 const logger = new Logger("PluginStore", "#3E82E5", "BDVencord");
 

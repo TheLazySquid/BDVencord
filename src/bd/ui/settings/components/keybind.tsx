@@ -1,10 +1,10 @@
-import {React} from "@webpack/common";
+import { React } from "@webpack/common";
 
 import Button from "../../base/button";
-import {LucideIcon} from "bd/ui/icons";
-import {Keyboard, X} from "lucide";
-import {none, GetSettingsContext} from "bd/ui/contexts";
-import type {MouseEvent} from "react";
+import { LucideIcon } from "@bd/ui/icons";
+import { Keyboard, X } from "lucide";
+import { none, GetSettingsContext } from "@bd/ui/contexts";
+import type { MouseEvent } from "react";
 
 
 
@@ -16,14 +16,14 @@ export interface KeybindProps {
     disabled?: boolean;
 }
 
-export default function Keybind({value: initialValue, onChange, max = 4, clearable = false, disabled}: KeybindProps) {
-    const {useState, useCallback, useEffect, useContext} = React;
+export default function Keybind({ value: initialValue, onChange, max = 4, clearable = false, disabled }: KeybindProps) {
+    const { useState, useCallback, useEffect, useContext } = React;
 
     // TODO: make these their own states
-    const [state, setState] = useState<{isRecording: boolean; accum: string[];}>({isRecording: false, accum: []});
+    const [state, setState] = useState<{ isRecording: boolean; accum: string[]; }>({ isRecording: false, accum: [] });
 
     const [internalValue, setValue] = useState(initialValue);
-    const {value: contextValue, disabled: contextDisabled} = useContext(GetSettingsContext());
+    const { value: contextValue, disabled: contextDisabled } = useContext(GetSettingsContext());
 
     const value = (contextValue !== none ? contextValue : internalValue) as string[];
     const isDisabled = contextValue !== none ? contextDisabled : disabled;
@@ -46,7 +46,7 @@ export default function Keybind({value: initialValue, onChange, max = 4, clearab
 
         state.accum.push(event.key);
         if (state.accum.length == max) {
-            setState({isRecording: false, accum: []});
+            setState({ isRecording: false, accum: [] });
             setValue(state.accum.slice(0));
             onChange?.(state.accum);
         }
@@ -59,7 +59,7 @@ export default function Keybind({value: initialValue, onChange, max = 4, clearab
         event.preventDefault();
 
         if (event.key === state.accum[0]) {
-            setState({isRecording: false, accum: []});
+            setState({ isRecording: false, accum: [] });
             setValue(state.accum.slice(0));
             onChange?.(state.accum);
         }
@@ -71,13 +71,13 @@ export default function Keybind({value: initialValue, onChange, max = 4, clearab
         if (isDisabled) return;
         if (onChange) onChange([]);
         setValue([]);
-        setState({...state, isRecording: false, accum: []});
+        setState({ ...state, isRecording: false, accum: [] });
     }, [onChange, state, isDisabled]);
 
     const onClick = useCallback((e: MouseEvent) => {
         if (isDisabled) return;
         if (e.currentTarget?.className?.includes?.("bd-keybind-clear") || e.currentTarget?.closest(".bd-button")?.className?.includes("bd-keybind-clear")) return clearKeybind(e);
-        setState({...state, isRecording: !state.isRecording});
+        setState({ ...state, isRecording: !state.isRecording });
     }, [state, clearKeybind, isDisabled]);
 
 

@@ -19,7 +19,7 @@
 import { debounce } from "@shared/debounce";
 import { IpcEvents } from "@shared/IpcEvents";
 import { contextBridge, webFrame } from "electron/renderer";
-import * as BDRemote from "bd/remote";
+import * as BDRemote from "./bd/remote";
 
 import VencordNative, { invoke, sendSync } from "./VencordNative";
 

@@ -1,6 +1,6 @@
-import {React} from "@webpack/common";
-import Text from "bd/ui/base/text";
-import {none, GetSettingsContext} from "bd/ui/contexts";
+import { React } from "@webpack/common";
+import Text from "@bd/ui/base/text";
+import { none, GetSettingsContext } from "@bd/ui/contexts";
 
 
 const positions: Position[] = [
@@ -17,9 +17,9 @@ export interface PositionProps {
     disabled?: boolean;
 }
 
-const Position = ({value: initialValue, onChange, disabled}: PositionProps) => {
+const Position = ({ value: initialValue, onChange, disabled }: PositionProps) => {
     const [internalValue, setValue] = React.useState(initialValue);
-    const {value: contextValue, disabled: contextDisabled} = React.useContext(GetSettingsContext());
+    const { value: contextValue, disabled: contextDisabled } = React.useContext(GetSettingsContext());
 
     const value = (contextValue !== none ? contextValue : internalValue) as Position;
     const isDisabled = contextValue !== none ? contextDisabled : disabled;

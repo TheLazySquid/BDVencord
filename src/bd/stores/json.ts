@@ -1,9 +1,9 @@
 import fs from "../polyfill/fs";
-import Remote from "bd/polyfill/remote";
+import Remote from "@bd/polyfill/remote";
 import Store from "./base";
 import Logger from "../core/logger";
-import {React} from "@webpack/common";
-import { BD_PLUGINS_DIR } from "bd/consts";
+import { React } from "@webpack/common";
+import { BD_PLUGINS_DIR } from "@bd/consts";
 
 
 export type Files = "settings" | "plugins" | "themes" | "misc" | "addon-store";

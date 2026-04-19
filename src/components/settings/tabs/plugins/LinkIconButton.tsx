@@ -9,7 +9,7 @@ import "./LinkIconButton.css";
 import { GithubIcon, WebsiteIcon } from "@components/Icons";
 import { getTheme, Theme } from "@utils/discord";
 import { MaskedLink, Tooltip } from "@webpack/common";
-import {LucideIcon} from "bd/ui/icons";
+import { LucideIcon } from "@bd/ui/icons";
 import { CircleQuestionMark, CircleDollarSign, HeartHandshake } from "lucide";
 
 export function DonateLinkIcon() {

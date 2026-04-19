@@ -1,7 +1,7 @@
 import { React } from "@webpack/common";
 import type { ToastType } from "../toasts";
-import {LucideIcon} from "bd/ui/icons";
-import {Info, CircleCheck, TriangleAlert, CircleAlert} from "lucide";
+import { LucideIcon } from "@bd/ui/icons";
+import { Info, CircleCheck, TriangleAlert, CircleAlert } from "lucide";
 
 export default function ToastIcon({ type }: { type: ToastType; }) {
     switch (type) {

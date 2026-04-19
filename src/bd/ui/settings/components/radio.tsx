@@ -1,7 +1,7 @@
-import {React} from "@webpack/common";
-import {none, GetSettingsContext} from "bd/ui/contexts";
+import { React } from "@webpack/common";
+import { none, GetSettingsContext } from "@bd/ui/contexts";
 
-import type {ChangeEvent} from "react";
+import type { ChangeEvent } from "react";
 
 
 export interface RadioOption {
@@ -21,7 +21,7 @@ export interface RadioProps {
     disabled?: boolean;
 }
 
-function RadioIndicator({checked} : {checked: boolean}) {
+function RadioIndicator({ checked }: { checked: boolean; }) {
     return <svg className="bd-radio-indicator" width="24" height="24" viewBox="0 0 24 24">
         <circle
             cx="12"
@@ -42,10 +42,10 @@ function RadioIndicator({checked} : {checked: boolean}) {
     </svg>;
 }
 
-export default function Radio({name, value: initialValue, options, onChange, disabled}: RadioProps) {
-    const {useState, useCallback, useContext} = React;
+export default function Radio({ name, value: initialValue, options, onChange, disabled }: RadioProps) {
+    const { useState, useCallback, useContext } = React;
 
-    const {value: contextValue, disabled: contextDisabled} = useContext(GetSettingsContext());
+    const { value: contextValue, disabled: contextDisabled } = useContext(GetSettingsContext());
     const value = contextValue !== none ? contextValue : initialValue;
     const isDisabled = contextValue !== none ? contextDisabled : disabled;
     const [index, setIndex] = useState(options.findIndex(o => o.value === value));
@@ -60,7 +60,7 @@ export default function Radio({name, value: initialValue, options, onChange, dis
 
     function renderOption(opt: RadioOption, i: number) {
         const isSelected = index === i;
-        return <label className={"bd-radio-option" + (isSelected ? " bd-radio-selected" : "")} style={{borderColor: opt.color ?? "transparent"}}>
+        return <label className={"bd-radio-option" + (isSelected ? " bd-radio-selected" : "")} style={{ borderColor: opt.color ?? "transparent" }}>
             <input onChange={change} type="radio" name={name} checked={isSelected} value={i} disabled={isDisabled} />
             <RadioIndicator checked={isSelected} />
             <div className="bd-radio-label-wrap">

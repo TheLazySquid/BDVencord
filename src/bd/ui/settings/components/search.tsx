@@ -1,7 +1,7 @@
 import { React } from "@webpack/common";
-import Button from "bd/ui/base/button";
-import {LucideIcon} from "bd/ui/icons";
-import {Search as SearchIcon, X} from "lucide";
+import Button from "@bd/ui/base/button";
+import { LucideIcon } from "@bd/ui/icons";
+import { Search as SearchIcon, X } from "lucide";
 import type { ChangeEvent, KeyboardEvent } from "react";
 
 export interface SearchProps {

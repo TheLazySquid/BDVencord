@@ -1,6 +1,6 @@
-import {React} from "@webpack/common";
-import {none, GetSettingsContext} from "bd/ui/contexts";
-import type {ChangeEvent, MouseEvent} from "react";
+import { React } from "@webpack/common";
+import { none, GetSettingsContext } from "@bd/ui/contexts";
+import type { ChangeEvent, MouseEvent } from "react";
 
 
 export interface SliderMarker {
@@ -19,11 +19,11 @@ export interface SliderProps {
     markers?: Array<number | SliderMarker>;
 }
 
-export default function Slider({value: initialValue, min, max, step, onChange, disabled, units = "", markers = []}: SliderProps) {
-    const {useState, useCallback, useMemo, useRef, useContext} = React;
+export default function Slider({ value: initialValue, min, max, step, onChange, disabled, units = "", markers = [] }: SliderProps) {
+    const { useState, useCallback, useMemo, useRef, useContext } = React;
 
     const [internalValue, setValue] = useState(initialValue);
-    const {value: contextValue, disabled: contextDisabled} = useContext(GetSettingsContext());
+    const { value: contextValue, disabled: contextDisabled } = useContext(GetSettingsContext());
 
     const value = (contextValue !== none ? contextValue : internalValue) as number;
     const isDisabled = contextValue !== none ? contextDisabled : disabled;
@@ -64,14 +64,14 @@ export default function Slider({value: initialValue, min, max, step, onChange, d
 
     return <div className={`bd-slider-wrap ${isDisabled ? "bd-slider-disabled" : ""} ${markers.length > 0 ? "bd-slider-markers" : ""}`}>
         <input onChange={change} type="range" className="bd-slider-input" min={min} max={max} step={step} value={value} disabled={disabled} ref={inputRef} />
-        <div className="bd-slider-label" style={{left: `${percent(value)}%`, transform: `translateX(${labelOffset}%)`}}>{value}{units}</div>
-        <div className="bd-slider-track" style={{backgroundSize: percent(value) + "% 100%"}} onClick={trackClick}></div>
+        <div className="bd-slider-label" style={{ left: `${percent(value)}%`, transform: `translateX(${labelOffset}%)` }}>{value}{units}</div>
+        <div className="bd-slider-track" style={{ backgroundSize: percent(value) + "% 100%" }} onClick={trackClick}></div>
         {markers?.length > 0 && <div className="bd-slider-marker-container">
             {markers.map(m => {
                 const markerValue = typeof m === "number" ? m : m.value;
                 const markerLabel = typeof m === "number" ? m : m?.label;
                 const showUnits = units && typeof m === "number";
-                return <div className="bd-slider-marker" style={{left: percent(markerValue) + "%"}} onClick={() => jumpToValue(markerValue)}>
+                return <div className="bd-slider-marker" style={{ left: percent(markerValue) + "%" }} onClick={() => jumpToValue(markerValue)}>
                     {markerLabel}{showUnits && units}
                 </div>;
             })}

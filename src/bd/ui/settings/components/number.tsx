@@ -1,9 +1,9 @@
-import {React} from "@webpack/common";
-import {none, GetSettingsContext} from "bd/ui/contexts";
-import Button from "bd/ui/base/button";
-import {LucideIcon} from "bd/ui/icons";
-import {Plus, Minus} from "lucide";
-import type {ChangeEvent} from "react";
+import { React } from "@webpack/common";
+import { none, GetSettingsContext } from "@bd/ui/contexts";
+import Button from "@bd/ui/base/button";
+import { LucideIcon } from "@bd/ui/icons";
+import { Plus, Minus } from "lucide";
+import type { ChangeEvent } from "react";
 
 
 export interface NumberInputProps {
@@ -15,11 +15,11 @@ export interface NumberInputProps {
     disabled?: boolean;
 }
 
-export default function Number({value: initialValue, min, max, step = 1, onChange, disabled}: NumberInputProps) {
-    const {useState, useCallback, useContext} = React;
+export default function Number({ value: initialValue, min, max, step = 1, onChange, disabled }: NumberInputProps) {
+    const { useState, useCallback, useContext } = React;
 
     const [internalValue, setValue] = useState(initialValue);
-    const {value: contextValue, disabled: contextDisabled} = useContext(GetSettingsContext());
+    const { value: contextValue, disabled: contextDisabled } = useContext(GetSettingsContext());
 
     const value = (contextValue !== none ? contextValue : internalValue) as number | string;
     const isDisabled = contextValue !== none ? contextDisabled : disabled;

@@ -1,8 +1,8 @@
 import clsx from "clsx";
-import {React} from "@webpack/common";
+import { React } from "@webpack/common";
 import Flex from "../../base/flex";
-import {LucideIcon} from "bd/ui/icons";
-import {Check} from "lucide";
+import { LucideIcon } from "@bd/ui/icons";
+import { Check } from "lucide";
 
 export interface CheckboxProps {
     value: boolean,
@@ -31,7 +31,7 @@ export default function CheckBox(props: CheckboxProps) {
 
     return (
         <Flex
-            className={clsx("bd-checkbox", props.className, {"bd-checkbox-disabled": props.disabled, "bd-checkbox-has-label": props.label, "bd-checkbox-reverse": props.reverse})}
+            className={clsx("bd-checkbox", props.className, { "bd-checkbox-disabled": props.disabled, "bd-checkbox-has-label": props.label, "bd-checkbox-reverse": props.reverse })}
             align={Flex.Align.CENTER}
             direction={props.reverse ? Flex.Direction.HORIZONTAL_REVERSE : Flex.Direction.HORIZONTAL}
             onClick={onChange}

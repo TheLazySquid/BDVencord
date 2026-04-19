@@ -1,8 +1,8 @@
-import {none, GetSettingsContext} from "bd/ui/contexts";
+import { none, GetSettingsContext } from "@bd/ui/contexts";
 import { React } from "@webpack/common";
 import clsx from "clsx";
-import {ChevronDown} from "lucide";
-import { LucideIcon } from "bd/ui/icons";
+import { ChevronDown } from "lucide";
+import { LucideIcon } from "@bd/ui/icons";
 
 export interface SelectOption {
     id?: string;
@@ -18,12 +18,12 @@ export interface SelectProps {
     disabled?: boolean;
 }
 
-export default function Select({value: initialValue, options, style, onChange, disabled}: SelectProps) {
-    const {useState, useCallback, useContext, useEffect, useLayoutEffect, useRef} = React;
+export default function Select({ value: initialValue, options, style, onChange, disabled }: SelectProps) {
+    const { useState, useCallback, useContext, useEffect, useLayoutEffect, useRef } = React;
 
     const [internalValue, setValue] = useState(initialValue ?? options[0].value);
     const [isOpen, setIsOpen] = useState(false);
-    const {value: contextValue, disabled: contextDisabled} = useContext(GetSettingsContext());
+    const { value: contextValue, disabled: contextDisabled } = useContext(GetSettingsContext());
 
     const value = contextValue !== none ? contextValue : internalValue;
     const isDisabled = contextValue !== none ? contextDisabled : disabled;
@@ -35,6 +35,7 @@ export default function Select({value: initialValue, options, style, onChange, d
     const change = useCallback((val: any) => {
         onChange?.(val);
         setValue(val);
+        optionsRef?.current?.togglePopover(false);
     }, [onChange]);
 
     useEffect(() => {
@@ -60,7 +61,7 @@ export default function Select({value: initialValue, options, style, onChange, d
 
     useLayoutEffect(() => {
         if (isOpen) {
-            selectedRef.current?.scrollIntoView({block: "center", behavior: "instant"});
+            selectedRef.current?.scrollIntoView({ block: "center", behavior: "instant" });
         }
     }, [isOpen]);
 

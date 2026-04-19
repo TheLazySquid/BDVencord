@@ -1,10 +1,10 @@
-import { BD_PLUGINS_DIR } from "bd/consts";
+import { BD_PLUGINS_DIR } from "@bd/consts";
 import AddonManager from "./addonmanager";
 import Remote from "../polyfill/remote";
 import { Logger } from "@utils/Logger";
-import { parseJSDoc } from "bd/utils/jsdoc";
-import { Settings } from "Vencord";
-import toasts from "bd/stores/toasts";
+import { parseJSDoc } from "@bd/utils/jsdoc";
+import { Settings } from "@api/Settings";
+import toasts from "@bd/stores/toasts";
 
 const logger = new Logger("PluginManager", "#3E82E5", "BDVencord");
 
@@ -207,7 +207,7 @@ export default new class PluginManager extends AddonManager {
         if (plugin.fileContent === newInfo.code) return;
 
         const headers = parseJSDoc(newInfo.code);
-        for(const key in headers) {
+        for (const key in headers) {
             plugin[key] = headers[key];
         }
 

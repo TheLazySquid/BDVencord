@@ -1,8 +1,8 @@
 import { React } from "@webpack/common";
-import Remote from "bd/polyfill/remote";
-import Button from "bd/ui/base/button";
-import {LucideIcon} from "bd/ui/icons";
-import {X} from "lucide";
+import Remote from "@bd/polyfill/remote";
+import Button from "@bd/ui/base/button";
+import { LucideIcon } from "@bd/ui/icons";
+import { X } from "lucide";
 import type { ChangeEvent } from "react";
 
 

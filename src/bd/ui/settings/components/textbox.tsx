@@ -1,6 +1,6 @@
-import {React} from "@webpack/common";
-import {none, GetSettingsContext} from "bd/ui/contexts";
-import type {ChangeEvent, KeyboardEvent} from "react";
+import { React } from "@webpack/common";
+import { none, GetSettingsContext } from "@bd/ui/contexts";
+import type { ChangeEvent, KeyboardEvent } from "react";
 
 
 export interface TextboxProps {
@@ -12,11 +12,11 @@ export interface TextboxProps {
     disabled?: boolean;
 }
 
-export default function Textbox({value: initialValue, maxLength, placeholder, onKeyDown, onChange, disabled}: TextboxProps) {
-    const {useState, useCallback, useContext} = React;
+export default function Textbox({ value: initialValue, maxLength, placeholder, onKeyDown, onChange, disabled }: TextboxProps) {
+    const { useState, useCallback, useContext } = React;
 
     const [internalValue, setValue] = useState(initialValue);
-    const {value: contextValue, disabled: contextDisabled} = useContext(GetSettingsContext());
+    const { value: contextValue, disabled: contextDisabled } = useContext(GetSettingsContext());
 
     const value = (contextValue !== none ? contextValue : internalValue) as string;
     const isDisabled = contextValue !== none ? contextDisabled : disabled;

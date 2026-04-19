@@ -1,9 +1,9 @@
-import ContextMenuPatcher from "bd/api/contextmenu";
+import ContextMenuPatcher from "@bd/api/contextmenu";
 import pluginmanager from "./pluginmanager";
 import { openPluginModal } from "@components/settings/tabs/bdplugins/PluginModal";
 import { useSettings } from "@api/Settings";
 import { openPluginStore } from "@components/settings/tabs/bdplugins/Store";
-import findInTree from "bd/utils/findintree";
+import findInTree from "@bd/utils/findintree";
 
 type ContextMenuType = ContextMenuPatcher & {
     Separator: any;

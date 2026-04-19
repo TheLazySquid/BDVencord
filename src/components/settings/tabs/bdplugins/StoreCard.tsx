@@ -1,11 +1,11 @@
-import { BdWebAddon } from "bd/types/addonstore";
-import DiscordModules from "bd/webpack/modules";
-import { LucideIcon } from "bd/ui/icons";
+import { BdWebAddon } from "@bd/types/addonstore";
+import DiscordModules from "@bd/webpack/modules";
+import { LucideIcon } from "@bd/ui/icons";
 import { BadgeCheck, CircleHelp, Github, Globe, Trash2 } from "lucide";
-import Button from "bd/ui/base/button";
-import Modals from "bd/ui/modals";
+import Button from "@bd/ui/base/button";
+import Modals from "@bd/ui/modals";
 import { useState } from "@webpack/common";
-import pluginmanager from "bd/core/pluginmanager";
+import pluginmanager from "@bd/core/pluginmanager";
 import { confirmWebInstall } from "./InstallPopup";
 
 interface Props {

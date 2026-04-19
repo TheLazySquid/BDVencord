@@ -47,7 +47,7 @@ import { checkForUpdates, update, UpdateLogger } from "./utils/updater";
 import { onceReady } from "./webpack";
 import { patches } from "./webpack/patchWebpack";
 
-import { onDOMReady, onInit, onWebpackReady } from "bd";
+import { onDOMReady, onInit, onWebpackReady } from "./bd";
 
 if (IS_REPORTER) {
     require("./debug/runReporter");

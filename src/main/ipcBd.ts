@@ -4,7 +4,7 @@ import { FSWatcher, mkdirSync, watch } from "fs";
 import { BD_PLUGINS_DIR, DATA_DIR } from "./utils/constants";
 import { readdir, readFile, stat, rm, writeFile } from "fs/promises";
 import { join } from "path";
-import { PluginInfo } from "bd/core/pluginmanager";
+import { PluginInfo } from "@bd/core/pluginmanager";
 
 mkdirSync(BD_PLUGINS_DIR, { recursive: true });
 

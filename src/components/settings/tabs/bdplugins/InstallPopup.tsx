@@ -3,13 +3,13 @@ import { Margins } from "@components/margins";
 import { classes } from "@utils/misc";
 import { ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalProps, ModalRoot, ModalSize, openModal } from "@utils/modal";
 import { React, Text } from "@webpack/common";
-import pluginmanager, { PluginMeta } from "bd/core/pluginmanager";
-import toasts from "bd/stores/toasts";
-import { BdWebAddon } from "bd/types/addonstore";
-import Button from "bd/ui/base/button";
-import { LucideIcon } from "bd/ui/icons";
-import CheckBox from "bd/ui/settings/components/checkbox";
-import { parseJSDoc } from "bd/utils/jsdoc";
+import pluginmanager, { PluginMeta } from "@bd/core/pluginmanager";
+import toasts from "@bd/stores/toasts";
+import { BdWebAddon } from "@bd/types/addonstore";
+import Button from "@bd/ui/base/button";
+import { LucideIcon } from "@bd/ui/icons";
+import CheckBox from "@bd/ui/settings/components/checkbox";
+import { parseJSDoc } from "@bd/utils/jsdoc";
 import { Github, IconNode, Info, Tag, User } from "lucide";
 
 interface PopupProps {
@@ -51,11 +51,11 @@ function InstallPopup(props: InstallProps & ModalProps) {
     const install = () => {
         props.onConfirm(enable);
         props.onClose();
-    }
+    };
 
     const openSource = () => {
-        if(!props.source) return;
-        
+        if (!props.source) return;
+
         const match = props.source.match(RAW_GIT_URL_REGEX);
         if (!match) {
             window.open(props.source, "_blank", "noopener,noreferrer");
@@ -116,7 +116,7 @@ export async function confirmWebInstall(plugin: BdWebAddon) {
             file: plugin.file_name,
             size: code.length // Approximately
         }, enable, true);
-    }
+    };
 
     await new Promise<void>((res) => {
         openInstallPopup({
@@ -168,7 +168,7 @@ export async function confirmFileInstall(fileList: FileList) {
                 file: file.name,
                 size: file.size
             }, enable, true);
-        }
+        };
 
         await new Promise<void>((res) => {
             openInstallPopup({

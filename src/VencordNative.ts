@@ -10,7 +10,7 @@ import type { PluginIpcMappings } from "@main/ipcPlugins";
 import type { UserThemeHeader } from "@main/themes";
 import { IpcEvents } from "@shared/IpcEvents";
 import type { IpcRes } from "@utils/types";
-import { PluginInfo } from "bd/core/pluginmanager";
+import { PluginInfo } from "@bd/core/pluginmanager";
 import { ipcRenderer } from "electron/renderer";
 
 export function invoke<T = any>(event: IpcEvents, ...args: any[]) {
