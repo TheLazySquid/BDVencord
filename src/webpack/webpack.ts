@@ -119,6 +119,7 @@ export const waitForSubscriptions = new Map<FilterFn, CallbackFn>();
 export const moduleListeners = new Set<CallbackFn>();
 export const factoryListeners = new Set<FactoryListernFn>();
 
+let done = false;
 let loadingModules = 1;
 let moduleLoadTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -131,11 +132,14 @@ function onLoadStart() {
 }
 
 function onLoadEnd() {
+    if (done) return;
+
     loadingModules--;
     if (loadingModules > 0) return;
 
     if (moduleLoadTimeout) clearTimeout(moduleLoadTimeout);
     moduleLoadTimeout = setTimeout(() => {
+        done = true;
         PluginManager.startPlugins("idle");
         MainPatcher.unpatchAll("WebpackRequire");
     }, 50);

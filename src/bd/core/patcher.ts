@@ -6,7 +6,7 @@
 import Logger from "./logger";
 
 import DiscordModules from "../webpack/modules";
-import {getByKeys} from "../webpack";
+import { getByKeys } from "../webpack";
 
 
 export interface GenericPatch {
@@ -58,7 +58,7 @@ export interface PatchOptions {
 export default class Patcher {
 
     private static _patches: GenericPatch[] = [];
-    static get patches() {return this._patches || (this._patches = []);}
+    static get patches() { return this._patches || (this._patches = []); }
 
     /**
      * Returns all the patches done by a specific caller
@@ -111,7 +111,7 @@ export default class Patcher {
             }
 
             const insteads = patch.children.filter(c => c.type === "instead");
-            if (!insteads.length) {returnValue = patch.originalFunction.apply(this, args);}
+            if (!insteads.length) { returnValue = patch.originalFunction.apply(this, args); }
             else {
                 for (const insteadPatch of insteads) {
                     try {
@@ -203,7 +203,7 @@ export default class Patcher {
         callback: M[K] extends (...a: any[]) => any ? BeforeCallback<M[K]> : never,
         options: PatchOptions = {}
     ) {
-        return this.pushChildPatch(caller, moduleToPatch, functionName, callback, Object.assign(options, {type: "before"}));
+        return this.pushChildPatch(caller, moduleToPatch, functionName, callback, Object.assign(options, { type: "before" }));
     }
 
     /**
@@ -225,7 +225,7 @@ export default class Patcher {
         callback: M[K] extends (...a: any[]) => any ? AfterCallback<M[K]> : never,
         options: PatchOptions = {}
     ) {
-        return this.pushChildPatch(caller, moduleToPatch, functionName, callback, Object.assign(options, {type: "after"}));
+        return this.pushChildPatch(caller, moduleToPatch, functionName, callback, Object.assign(options, { type: "after" }));
     }
 
     /**
@@ -248,7 +248,7 @@ export default class Patcher {
         callback: M[K] extends (...a: any[]) => any ? InsteadCallback<M[K]> : never,
         options: PatchOptions = {}
     ) {
-        return this.pushChildPatch(caller, moduleToPatch, functionName, callback, Object.assign(options, {type: "instead"}));
+        return this.pushChildPatch(caller, moduleToPatch, functionName, callback, Object.assign(options, { type: "instead" }));
     }
 
     /**
@@ -273,14 +273,14 @@ export default class Patcher {
         callback: M[K] extends (...a: any[]) => any ? PatchCallback<M[K]> : never,
         options: PatchOptions = {}
     ) {
-        const {type = "after", forcePatch = true} = options;
+        const { type = "after", forcePatch = true } = options;
         const module = this.resolveModule<M>(moduleToPatch);
         if (!module) return null;
-        if (!module[functionName] && forcePatch) module[functionName] = (function () {}) as M[K];
+        if (!module[functionName] && forcePatch) module[functionName] = (function () { }) as M[K];
         if (!(module[functionName] instanceof Function)) return null;
 
         if (typeof moduleToPatch === "string") options.displayName = moduleToPatch;
-        const displayName = options.displayName || (module as any).displayName || (module as any).name || (module.constructor as any).displayName || module.constructor.name;
+        const displayName = options.displayName || (module as any).displayName || (module as any).name || (module.constructor as any)?.displayName || module.constructor?.name || "anonymous";
 
         const patchId = `${displayName}.${functionName}`;
         const patch: Patch<M, K> = (this.patches.find(p => p.module == module && p.functionName == functionName) || this.makePatch(module, functionName, patchId)) as Patch<M, K>;

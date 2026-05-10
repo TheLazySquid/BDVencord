@@ -26,7 +26,7 @@ export function onDOMReady() {
     DOMManager.init();
 }
 
-export function onWebpackReady() {
+export async function onWebpackReady() {
     loadStores();
     loadModules();
     MenuPatcher.initialize();
@@ -34,8 +34,9 @@ export function onWebpackReady() {
     Toasts.initialize();
     NotificationUIInstance.initialize();
     CommandManager.initialize();
-    PluginManager.initialize();
-    PluginManager.startPlugins("connection");
     PluginStore.init();
     patchSettingsContextMenu();
+    
+    await PluginManager.initialize();
+    PluginManager.startPlugins("connection");
 }

@@ -1,9 +1,9 @@
-import type {Webpack} from "../types";
+import type { Webpack } from "../types";
 import Logger from "../core/logger";
 
 const hasThrown = new WeakSet();
 
-export const wrapFilter = (filter: Webpack.Filter): Webpack.Filter => (exports, module, moduleId) => {
+export const wrapModuleFilter = (filter: Webpack.ModuleFilter): Webpack.ModuleFilter => (exports, module, moduleId) => {
     try {
         if (exports instanceof Window) return false;
         if (exports?.default?.remove && exports?.default?.set && exports?.default?.clear && exports?.default?.get && !exports?.default?.sort) return false;
@@ -13,11 +13,24 @@ export const wrapFilter = (filter: Webpack.Filter): Webpack.Filter => (exports, 
         return filter(exports, module, moduleId);
     }
     catch (error) {
-        if (!hasThrown.has(filter)) Logger.warn("WebpackModules~getModule", "Module filter threw an exception.", error, {filter, module});
+        if (!hasThrown.has(filter)) Logger.warn("WebpackModules~getModule", "Module filter threw an exception.", error, { filter, module });
         hasThrown.add(filter);
         return false;
     }
 };
+
+export const wrapDeclarationFilter = (filter: Webpack.ExportedOnlyFilter) => Object.assign(((value) => {
+    try {
+        return filter(value);
+    }
+    catch (error) {
+        if (!hasThrown.has(filter)) Logger.warn("WebpackModules~getModule", "Declaration filter threw an exception.", error, { filter, module });
+        hasThrown.add(filter);
+        return false;
+    }
+}) satisfies Webpack.ExportedOnlyFilter, {
+    __originalFilter: filter
+});
 
 const TypedArray = Object.getPrototypeOf(Uint8Array);
 export function shouldSkipModule(exports: any) {

@@ -10,12 +10,13 @@ export interface Require {
 export interface Module<T extends any = any> {
     id: PropertyKey,
     exports: T,
+    declarations: Record<string, any>;
     loaded: boolean;
 }
 
 export type RawModule = (module: Module, exports: object, require: Require) => void;
 
-export type Filter = (exported: any, module: Module, id: PropertyKey) => any;
+export type ModuleFilter = (exported: any, module: Module, id: PropertyKey) => any;
 export type ExportedOnlyFilter = (exported: any) => any;
 
 export type Options = {
@@ -26,18 +27,24 @@ export type Options = {
     fatal?: boolean;
     cacheId?: string;
     firstId?: number;
+    declarationFilter?: ExportedOnlyFilter;
 };
 
+export type MangledOptions = Options & {
+    mapDeclarations?: boolean;
+}
+
 export type BulkQueries = Options & {
-    filter: Filter,
+    filter: ModuleFilter,
     all?: boolean,
     map?: Record<string, ExportedOnlyFilter>;
+    mapDeclarations?: boolean;
 };
 export type WithKeyOptions = Options & {
     target?: any;
 };
 
-export type LazyOptions = Options & {signal?: AbortSignal;};
+export type LazyOptions = Options & { signal?: AbortSignal; };
 
 export type ModuleWithEffect = [
     any[],

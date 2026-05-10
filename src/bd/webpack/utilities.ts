@@ -1,13 +1,14 @@
 /* eslint-disable no-labels */
 
-import type {Webpack} from "../types";
-import {bySource} from "./filter";
-import {getModule} from "./searching";
-import {getDefaultKey, makeException, shouldSkipModule, wrapFilter} from "./shared";
+import type { Webpack } from "../types";
+import { bySource } from "./filter";
+import { getDeclaration, getModule } from "./searching";
+import { getDefaultKey, makeException, shouldSkipModule, wrapModuleFilter } from "./shared";
 import WebpackCache from "./cache";
-import {wreq} from "@webpack";
+import { wreq } from "@webpack";
+import { mapObject } from "@bd/utils/object";
 
-export function* getWithKey(filter: Webpack.ExportedOnlyFilter, {target = null, ...rest}: Webpack.WithKeyOptions = {}) {
+export function* getWithKey(filter: Webpack.ExportedOnlyFilter, { target = null, ...rest }: Webpack.WithKeyOptions = {}) {
     yield target ??= getModule(exports =>
         Object.values(exports).some(filter),
         rest
@@ -17,7 +18,7 @@ export function* getWithKey(filter: Webpack.ExportedOnlyFilter, {target = null, 
 }
 
 export function getById<T extends object>(id: PropertyKey, options: Webpack.Options = {}): T | undefined {
-    const {raw, fatal} = options;
+    const { raw, fatal } = options;
 
     const module = wreq.c[id];
 
@@ -32,75 +33,31 @@ export function getById<T extends object>(id: PropertyKey, options: Webpack.Opti
     return undefined;
 }
 
-function mapObject<T extends object>(module: any, mappers: Record<keyof T, Webpack.ExportedOnlyFilter>): T {
-    const mapped = {} as Partial<T>;
-
-    const moduleKeys = Object.keys(module);
-    const mapperKeys = Object.keys(mappers) as Array<keyof T>;
-
-    for (let i = 0; i < moduleKeys.length; i++) {
-        const searchKey = moduleKeys[i];
-        if (!Object.prototype.hasOwnProperty.call(module, searchKey)) continue;
-
-        for (let j = 0; j < mapperKeys.length; j++) {
-            const key = mapperKeys[j];
-            if (!Object.prototype.hasOwnProperty.call(mappers, key)) continue;
-            if (Object.prototype.hasOwnProperty.call(mapped, key)) continue;
-
-            if (mappers[key](module[searchKey])) {
-                Object.defineProperty(mapped, key, {
-                    get() {
-                        return module[searchKey];
-                    },
-                    set(value) {
-                        module[searchKey] = value;
-                    },
-                    enumerable: true,
-                    configurable: false
-                });
-            }
-        }
-    }
-
-    for (let i = 0; i < mapperKeys.length; i++) {
-        const key = mapperKeys[i];
-        if (!Object.prototype.hasOwnProperty.call(mapped, key)) {
-            Object.defineProperty(mapped, key, {
-                value: undefined,
-                enumerable: true,
-                configurable: false
-            });
-        }
-    }
-
-    Object.defineProperty(mapped, Symbol("betterdiscord.getMangled"), {
-        value: module,
-        configurable: false
-    });
-
-    return mapped as T;
-}
-
 export function getMangled<T extends object>(
-    filter: Webpack.Filter | string | RegExp | number,
+    filter: Webpack.ModuleFilter | string | RegExp | number,
     mappers: Record<keyof T, Webpack.ExportedOnlyFilter>,
-    options: Webpack.Options = {}
+    options: Webpack.MangledOptions = {}
 ): T {
     if (typeof filter === "string" || filter instanceof RegExp) {
         filter = bySource(filter);
     }
 
+    options.raw ??= options.mapDeclarations ?? false;
+
     let module = typeof filter === "number" ? getById(filter, options) : getModule<any>(filter, options);
     if (!module) return {} as T;
-    if (options.raw) module = module.exports;
+
+    if (options.raw) module = module[options.mapDeclarations ? "declarations" : "exports"];
 
     return mapObject(module, mappers);
 }
 
 export function bulkGetMatched<T>(module: Webpack.Module<any>, options: Webpack.BulkQueries): T | undefined {
-    const {filter, defaultExport = true, searchExports = false, searchDefault = true, raw = false, map} = options;
+    const { filter, defaultExport = true, searchExports = false, searchDefault = true, raw = false, map } = options;
 
     if (filter(module.exports, module, module.id)) {
+        if (options.declarationFilter) return getDeclaration(module, options.declarationFilter);
+        if (options.mapDeclarations && options.map) return mapObject(module.declarations, options.map) as T;
         const trueItem = map ? mapObject(module.exports, map) : raw ? module : module.exports;
         return trueItem;
     }
@@ -116,8 +73,10 @@ export function bulkGetMatched<T>(module: Webpack.Module<any>, options: Webpack.
         if (shouldSkipModule(exported)) continue;
 
         if (filter(exported, module, module.id)) {
-            let value: any;
+            if (options.declarationFilter) return getDeclaration(module, options.declarationFilter);
+            if (options.mapDeclarations && options.map) return mapObject(module.declarations, options.map) as T;
 
+            let value: any;
             if (!defaultExport && defaultKey === key) {
                 value = map ? mapObject(module.exports, map) : raw ? module : module.exports;
             }
@@ -136,7 +95,7 @@ export function getBulk<T extends any[]>(...queries: Webpack.BulkQueries[]): T {
 
     queries = queries.map((query, i) => ({
         ...query,
-        filter: wrapFilter(query.filter),
+        filter: wrapModuleFilter(query.filter),
         cacheId: query.cacheId || (query.cacheId === null ? undefined : WebpackCache.getIdFromStack(i))
     }));
 
@@ -145,7 +104,7 @@ export function getBulk<T extends any[]>(...queries: Webpack.BulkQueries[]): T {
 
     // Check the firstId for each query
     for (let i = 0; i < queries.length; i++) {
-        const {firstId} = queries[i];
+        const { firstId } = queries[i];
         if (!firstId) continue;
 
         const module = wreq.c[firstId];
@@ -159,7 +118,7 @@ export function getBulk<T extends any[]>(...queries: Webpack.BulkQueries[]): T {
 
     // Check if modules are cached
     for (let i = 0; i < queries.length; i++) {
-        const {all, cacheId} = queries[i];
+        const { all, cacheId } = queries[i];
         if (all || !cacheId) continue;
 
         const id = WebpackCache.get(cacheId);
@@ -180,7 +139,7 @@ export function getBulk<T extends any[]>(...queries: Webpack.BulkQueries[]): T {
         if (shouldSkipModule(module.exports)) continue;
 
         for (let index = 0; index < queries.length; index++) {
-            const {all = false, cacheId} = queries[index];
+            const { all = false, cacheId } = queries[index];
             if (!all && index in returnedModules) {
                 continue;
             }

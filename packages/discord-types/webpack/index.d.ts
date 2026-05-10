@@ -10,6 +10,7 @@ export type Module = {
     id: PropertyKey;
     loaded: boolean;
     exports: ModuleExports;
+    declarations: Record<string, any>;
 };
 
 /** exports can be anything, however initially it is always an empty object */

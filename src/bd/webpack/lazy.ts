@@ -1,14 +1,14 @@
-import type {Webpack} from "../types";
-import {getModule} from "./searching";
-import {shouldSkipModule, getDefaultKey, wrapFilter, makeException} from "./shared";
-import {FilterFn, waitForSubscriptions, wreq} from "@webpack";
+import type { Webpack } from "../types";
+import { getModule } from "./searching";
+import { shouldSkipModule, getDefaultKey, wrapModuleFilter, makeException } from "./shared";
+import { FilterFn, waitForSubscriptions, wreq } from "@webpack";
 
 const ChunkIdRegex = /n\.e\("(\d+)"\)/g;
 const FinalModuleIdRegex = /n\.bind\(n,\s*(\d+)\s*\)/g;
 const CreatePromiseId = /createPromise:\s*\(\)\s*=>\s*([^}]+)\.then\(n\.bind\(n,\s*(\d+)\)\)/g;
 
-export function getLazy<T>(filter: Webpack.Filter, options: Webpack.LazyOptions = {}): Promise<T | undefined> {
-    const {signal: abortSignal, defaultExport = true, searchDefault = true, searchExports = false, raw = false, fatal = false} = options;
+export function getLazy<T>(filter: Webpack.ModuleFilter, options: Webpack.LazyOptions = {}): Promise<T | undefined> {
+    const { signal: abortSignal, defaultExport = true, searchDefault = true, searchExports = false, raw = false, fatal = false } = options;
 
     if (abortSignal?.aborted) {
         if (fatal) return Promise.reject(makeException());
@@ -18,13 +18,13 @@ export function getLazy<T>(filter: Webpack.Filter, options: Webpack.LazyOptions 
     const cached = getModule<T>(filter, options);
     if (cached) return Promise.resolve(cached);
 
-    filter = wrapFilter(filter);
+    filter = wrapModuleFilter(filter);
 
     return new Promise((resolve, reject) => {
         const cancel = () => void waitForSubscriptions.delete(listener);
 
         const listener: FilterFn = (_, module) => {
-            if(!module) return false;
+            if (!module) return false;
             if (shouldSkipModule(module.exports)) return false;
 
             if (filter(module.exports, module, module.id)) {
@@ -61,7 +61,7 @@ export function getLazy<T>(filter: Webpack.Filter, options: Webpack.LazyOptions 
             return false;
         };
 
-        waitForSubscriptions.set(listener, () => {});
+        waitForSubscriptions.set(listener, () => { });
         abortSignal?.addEventListener("abort", () => {
             cancel();
             if (fatal) reject(makeException());

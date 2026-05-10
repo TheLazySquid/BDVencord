@@ -14,6 +14,7 @@ import { WebpackRequire } from "@vencord/discord-types/webpack";
 
 import { AnyModuleFactory, AnyWebpackRequire, MaybePatchedModuleFactory, PatchedModuleFactory } from "./types";
 import { _blacklistBadModules, _initWebpack, factoryListeners, findModuleFactory, moduleListeners, waitForSubscriptions, wreq } from "./webpack";
+import parseDeclarations from "@bd/utils/parseDeclarations";
 
 export const patches = [] as Patch[];
 
@@ -540,7 +541,9 @@ function demangleClassModule(newValue: AnyModuleFactory) {
  * @returns The patched module factory
  */
 function patchFactory(moduleId: PropertyKey, originalFactory: AnyModuleFactory): PatchedModuleFactory {
+    const actualOriginal = originalFactory;
     originalFactory = demangleClassModule(originalFactory);
+    const wasClassModule = actualOriginal !== originalFactory;
 
     const originalFactoryCode = String(originalFactory);
     const isArrowFunction = originalFactoryCode.startsWith("(");
@@ -673,6 +676,17 @@ function patchFactory(moduleId: PropertyKey, originalFactory: AnyModuleFactory):
         if (!patch.all) {
             patches.splice(i--, 1);
         }
+    }
+
+    // Expose declarations
+    if (!wasClassModule) {
+        const vars = parseDeclarations(code);
+        const functionBody = code.indexOf(")") + 2;
+        const varGettersAndSetters = vars.map((name) => `get ${name}(){return ${name}},set ${name}(_${name}){${name}=_${name}}`);
+        const declarationString = `Object.seal({__proto__:null,${varGettersAndSetters.join(",")}})`;
+
+        patchedSource = `${code.slice(0, functionBody)};arguments[0].declarations=${declarationString};${code.slice(functionBody)}`;
+        patchedFactory = (0, eval)(patchedSource);
     }
 
     patchedFactory[SYM_ORIGINAL_FACTORY] = originalFactory;

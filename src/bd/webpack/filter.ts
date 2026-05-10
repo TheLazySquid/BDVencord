@@ -1,5 +1,5 @@
 import { wreq } from "@webpack";
-import type {Webpack} from "../types";
+import type { Webpack } from "../types";
 
 export function byKeys(props: string[], filter: Webpack.ExportedOnlyFilter = m => m): Webpack.ExportedOnlyFilter {
     return module => {
@@ -33,13 +33,13 @@ export function byRegex(search: RegExp, filter: Webpack.ExportedOnlyFilter = m =
         const method = filter(module);
         if (!method) return false;
         let methodString = "";
-        try {methodString = method.toString([]);}
-        catch {methodString = method.toString();}
+        try { methodString = method.toString([]); }
+        catch { methodString = method.toString(); }
         return methodString.search(search) !== -1;
     };
 }
 
-export function bySource(...searches: Array<string | RegExp>): Webpack.Filter {
+export function bySource(...searches: Array<string | RegExp>): Webpack.ModuleFilter {
     const moduleCache = wreq.m;
 
     return (_, module) => {
@@ -83,7 +83,7 @@ export function byStrings(...strings: string[]): Webpack.ExportedOnlyFilter {
 
             return true;
         }
-        catch {return false;}
+        catch { return false; }
     };
 }
 
@@ -100,15 +100,15 @@ export function byStoreName(name: string): Webpack.ExportedOnlyFilter {
 }
 
 export function combine(...filters: Webpack.ExportedOnlyFilter[]): Webpack.ExportedOnlyFilter;
-export function combine(...filters: Array<Webpack.ExportedOnlyFilter | Webpack.Filter>): Webpack.Filter;
-export function combine(...filters: Webpack.Filter[]): Webpack.Filter {
+export function combine(...filters: Array<Webpack.ExportedOnlyFilter | Webpack.ModuleFilter>): Webpack.ModuleFilter;
+export function combine(...filters: Webpack.ModuleFilter[]): Webpack.ModuleFilter {
     return (exports, module, id) => {
         return filters.every(filter => filter(exports, module, id));
     };
 }
 
 export function not(filter: Webpack.ExportedOnlyFilter): Webpack.ExportedOnlyFilter;
-export function not(filter: Webpack.ExportedOnlyFilter | Webpack.Filter): Webpack.Filter;
-export function not(filter: Webpack.Filter): Webpack.Filter {
+export function not(filter: Webpack.ExportedOnlyFilter | Webpack.ModuleFilter): Webpack.ModuleFilter;
+export function not(filter: Webpack.ModuleFilter): Webpack.ModuleFilter {
     return (exports, module, id) => !filter(exports, module, id);
 }
