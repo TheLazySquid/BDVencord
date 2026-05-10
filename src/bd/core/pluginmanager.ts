@@ -29,6 +29,7 @@ export interface PluginMeta {
     source?: string;
     version: string;
     website?: string;
+    runAt?: string;
 }
 
 interface PluginInstance {
@@ -65,17 +66,25 @@ export default new class PluginManager extends AddonManager {
             if (plugin) this.addonList.push(plugin);
         }
         this.sortAddons();
+    }
 
-        let started = 0;
+    startedPlugins = 0;
+    startPlugins(point: "connection" | "idle") {
+        logger.log("Starting plugins at point", point);
+
         for (const plugin of this.addonList) {
+            if (plugin.runAt !== point) continue;
             if (!Settings.bdplugins[plugin.id]) continue;
 
-            let success = this.startPlugin(plugin, false);
-            if (success) started++;
+            const success = this.startPlugin(plugin, false);
+            if (success) this.startedPlugins++;
         }
 
-        if (started > 0) {
-            const message = `Started ${started} BetterDiscord plugin${started !== 1 ? "s" : ""}`;
+        // Finish setup after idle plugins have started
+        if (point !== "idle") return;
+
+        if (this.startedPlugins > 0) {
+            const message = `Started ${this.startedPlugins} BetterDiscord plugin${this.startedPlugins !== 1 ? "s" : ""}`;
             toasts.show(message, { type: "success" });
         }
 
@@ -99,6 +108,7 @@ export default new class PluginManager extends AddonManager {
         if (!plugin.author) plugin.author = "Unknown";
         if (!plugin.version) plugin.version = "???";
         if (!plugin.description) plugin.description = "Description not provided.";
+        if (plugin.runAt !== "idle") plugin.runAt = "connection";
 
         plugin.id = plugin.name || info.file;
         plugin.slug = info.file.replace(".plugin.js", "").replace(/ /g, "-");

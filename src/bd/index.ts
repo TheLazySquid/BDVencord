@@ -10,7 +10,7 @@ import NotificationUIInstance from "@bd/ui/notifications";
 import { MenuPatcher } from "@bd/api/contextmenu";
 import CommandManager from "@bd/core/commandmanager";
 import BdApi from "@bd/api";
-import pluginmanager from "@bd/core/pluginmanager";
+import PluginManager from "@bd/core/pluginmanager";
 import PluginStore from "./core/pluginstore";
 import { patchSettingsContextMenu } from "./core/contextmenu";
 
@@ -34,7 +34,8 @@ export function onWebpackReady() {
     Toasts.initialize();
     NotificationUIInstance.initialize();
     CommandManager.initialize();
-    pluginmanager.initialize();
+    PluginManager.initialize();
+    PluginManager.startPlugins("connection");
     PluginStore.init();
     patchSettingsContextMenu();
 }

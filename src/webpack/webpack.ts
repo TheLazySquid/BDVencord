@@ -26,6 +26,9 @@ import type { FluxStore } from "@vencord/discord-types";
 import type { Module, ModuleExports, ModuleFactory, WebpackRequire } from "@vencord/discord-types/webpack";
 
 import type { AnyModuleFactory, AnyWebpackRequire } from "./types";
+import MainPatcher from "@bd/core/patcher";
+import PluginManager from "@bd/core/pluginmanager";
+import { getModule } from "@bd/webpack";
 
 const logger = new Logger("Webpack");
 
@@ -116,9 +119,55 @@ export const waitForSubscriptions = new Map<FilterFn, CallbackFn>();
 export const moduleListeners = new Set<CallbackFn>();
 export const factoryListeners = new Set<FactoryListernFn>();
 
+let loadingModules = 1;
+let moduleLoadTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function onLoadStart() {
+    loadingModules++;
+    if (moduleLoadTimeout) {
+        clearTimeout(moduleLoadTimeout);
+        moduleLoadTimeout = null;
+    }
+}
+
+function onLoadEnd() {
+    loadingModules--;
+    if (loadingModules > 0) return;
+
+    if (moduleLoadTimeout) clearTimeout(moduleLoadTimeout);
+    moduleLoadTimeout = setTimeout(() => {
+        PluginManager.startPlugins("idle");
+        MainPatcher.unpatchAll("WebpackRequire");
+    }, 50);
+}
+
+function patchModuleLoading() {
+    waitFor(m => m.appFirstRenderAfterReadyPayload, (mod) => {
+        MainPatcher.after("WebpackRequire", mod, "appFirstRenderAfterReadyPayload", () => {
+            onLoadEnd();
+        });
+    });
+
+    MainPatcher.after("WebpackRequire", wreq, "e", (_, __, loadPromise) => {
+        onLoadStart();
+        loadPromise.finally(onLoadEnd);
+    });
+
+    MainPatcher.before("WebpackRequire", wreq, "l", (_, args) => {
+        onLoadStart();
+
+        const onLoad = args[1];
+        args[1] = function (event: Event) {
+            onLoadEnd();
+            onLoad.call(this, event);
+        };
+    });
+}
+
 export function _initWebpack(webpackRequire: WebpackRequire) {
     wreq = webpackRequire;
     cache = webpackRequire.c;
+    patchModuleLoading();
 
     wreq.d = (target: object, exports: any) => {
         for (const key in exports) {
