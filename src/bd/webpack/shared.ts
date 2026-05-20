@@ -24,7 +24,7 @@ export const wrapDeclarationFilter = (filter: Webpack.ExportedOnlyFilter) => Obj
         return filter(value);
     }
     catch (error) {
-        if (!hasThrown.has(filter)) Logger.warn("WebpackModules~getModule", "Declaration filter threw an exception.", error, { filter, module });
+        if (!hasThrown.has(filter)) Logger.warn("WebpackModules~getModule", "Declaration filter threw an exception.", error, { filter });
         hasThrown.add(filter);
         return false;
     }
