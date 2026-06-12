@@ -54,6 +54,8 @@ export const enum IpcEvents {
     RENDERER_CSS_UPDATE = "VencordRendererCssUpdate",
     PRELOAD_GET_RENDERER_JS = "VencordPreloadGetRendererJs",
 
+    SUPPORTS_WINDOWS_MATERIAL = "VencordSupportsWindowsMaterial",
+
     BD_GET_PLUGINS = "BDVencordGetPlugins",
     BD_PLUGIN_CREATED = "BDVencordPluginCreated",
     BD_PLUGIN_DELETED = "BDVencordPluginDeleted",
