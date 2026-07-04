@@ -514,15 +514,14 @@ function demangleClassModule(newValue: AnyModuleFactory) {
             if (!Object.hasOwn(module.exports, key)) continue;
 
             const element = module.exports[key];
+            if (typeof element !== "string") return;
 
-            if (typeof element === "string") {
-                const match = element.match(EXTRACT_CLASS);
+            const match = element.match(EXTRACT_CLASS);
+            if (!match) continue;
+            if (match[1] in module.exports) continue;
 
-                if (!match) continue;
-                if (match[1] in module.exports) continue;
-
-                definers[match[1]] = { value: element };
-            }
+            definers[match[1]] = {value: element, enumerable: true};
+            definers[key] = {value: element, enumerable: false};
         }
 
         Object.defineProperties(module.exports, definers);
