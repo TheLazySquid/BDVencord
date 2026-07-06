@@ -638,7 +638,7 @@ function patchFactory(moduleId: PropertyKey, originalFactory: AnyModuleFactory):
                 }
 
                 code = newCode;
-                patchedSource = `// Webpack Module ${String(moduleId)} - Patched by ${pluginsList.join(", ")}\n${code}\n//# sourceURL=file:///WebpackModule${String(moduleId)}`;
+                patchedSource = `// Webpack Module ${String(moduleId)} - Patched by ${pluginsList.join(", ")}\n${code}`;
                 patchedFactory = (0, eval)(patchedSource);
 
                 if (!patchedBy.has(patch.plugin)) {
@@ -684,7 +684,11 @@ function patchFactory(moduleId: PropertyKey, originalFactory: AnyModuleFactory):
         const varGettersAndSetters = vars.map((name) => `get ${name}(){return ${name}},set ${name}(_${name}){${name}=_${name}}`);
         const declarationString = `Object.seal({__proto__:null,${varGettersAndSetters.join(",")}})`;
 
-        patchedSource = `${code.slice(0, functionBody)};arguments[0].declarations=${declarationString};${code.slice(functionBody)}`;
+        const moduleIdNumber = Number(moduleId);
+        const folder = isNaN(moduleIdNumber) ? "misc" : Math.floor(moduleIdNumber / 1000);
+        const sourceUrl = `file:///WebpackModules/${folder}/${String(moduleId)}.js`;
+
+        patchedSource = `${code.slice(0, functionBody)};arguments[0].declarations=${declarationString};${code.slice(functionBody)}\n//# sourceURL=${sourceUrl}`;
         patchedFactory = (0, eval)(patchedSource);
     }
 
