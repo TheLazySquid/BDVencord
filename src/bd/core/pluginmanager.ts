@@ -241,11 +241,12 @@ export default new class PluginManager extends AddonManager {
         const plugin = this.initPlugin(info);
         if (!plugin) return;
 
+        this.addonList.push(plugin);
+
         if (Settings.bdplugins[plugin.id]) this.startPlugin(plugin);
         else if (enable) this.enable(plugin);
         else toasts.show(`Added BetterDiscord plugin ${plugin.name}`, { type: "success" });
 
-        this.addonList.push(plugin);
         this.sortAddons();
         this.emitChange();
 
