@@ -1,7 +1,6 @@
 import "./PluginModal.css";
 import { Margins } from "@components/margins";
-import { ModalCloseButton, ModalContent, ModalHeader, ModalProps, ModalRoot, ModalSize, openModal } from "@utils/modal";
-import { Forms, React, Text, Tooltip } from "@webpack/common";
+import { Forms, React, Text, Tooltip, Modal, openModal } from "@webpack/common";
 import { BDPlugin } from "@bd/core/pluginmanager";
 import { Flex } from "@components/Flex";
 import { classes } from "@utils/misc";
@@ -10,10 +9,12 @@ import ErrorBoundary from "@components/ErrorBoundary";
 import { DonateButton, GithubButton, PatreonButton, SupportServerIcon, WebsiteButton } from "../plugins/LinkIconButton";
 import { classNameFactory } from "@utils/css";
 import Modals from "@bd/ui/modals";
+import { RenderModalProps } from "@vencord/discord-types";
+import { BaseText } from "@components/BaseText";
 
 const cl = classNameFactory("vc-plugin-modal-");
 
-interface BDPluginModalProps extends ModalProps {
+interface BDPluginModalProps extends RenderModalProps {
     plugin: BDPlugin;
     enabled: boolean;
 }
@@ -62,13 +63,15 @@ function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginMo
     };
 
     return (
-        <ModalRoot size={ModalSize.MEDIUM} transitionState={transitionState}>
-            <ModalHeader separator={false} className={Margins.bottom8}>
-                <Text variant="heading-xl/bold" style={{ flexGrow: 1 }}>{plugin.name} v{plugin.version}</Text>
-                <ModalCloseButton onClick={onClose} />
-            </ModalHeader>
-
-            <ModalContent className={Margins.bottom16}>
+        <Modal
+            transitionState={transitionState}
+            onClose={onClose}
+            size="lg"
+            title={
+                <BaseText tag="h1" weight="semibold" size="lg">{plugin.name} v{plugin.version}</BaseText>
+            }
+        >
+            <div className={"vc-settings-modal-content"}>
                 <section>
                     <Flex className={cl("info")}>
                         <Forms.FormText className={cl("description")}>{plugin.description}</Forms.FormText>
@@ -122,8 +125,8 @@ function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginMo
                         {getSettings()}
                     </ErrorBoundary>
                 </section>
-            </ModalContent>
-        </ModalRoot>
+            </div>
+        </Modal>
     );
 }
 
