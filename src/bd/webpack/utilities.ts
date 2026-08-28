@@ -7,6 +7,7 @@ import { getDefaultKey, makeException, shouldSkipModule, wrapModuleFilter } from
 import WebpackCache from "./cache";
 import { wreq } from "@webpack";
 import { mapObject } from "@bd/utils/object";
+import cache from "@bd/utils/cache";
 
 export function* getWithKey(filter: Webpack.ExportedOnlyFilter, { target = null, ...rest }: Webpack.WithKeyOptions = {}) {
     yield target ??= getModule(exports =>
@@ -34,12 +35,15 @@ export function getById<T extends object>(id: PropertyKey, options: Webpack.Opti
 }
 
 export function getMangled<T extends object>(
-    filter: Webpack.ModuleFilter | string | RegExp | number,
+    filter: Webpack.ModuleFilter | string | RegExp | Array<string | RegExp> | number,
     mappers: Record<keyof T, Webpack.ExportedOnlyFilter>,
     options: Webpack.MangledOptions = {}
 ): T {
     if (typeof filter === "string" || filter instanceof RegExp) {
         filter = bySource(filter);
+    }
+    else if (Array.isArray(filter)) {
+        filter = bySource(...filter);
     }
 
     options.raw ??= options.mapDeclarations ?? false;
@@ -185,4 +189,16 @@ export function getBulkKeyed<T extends object>(queries: Record<keyof T, Webpack.
     return Object.fromEntries(
         Object.keys(queries).map((key, index) => [key, modules[index]])
     ) as T;
+}
+
+export function getProxy<T extends object>(filter: Webpack.ModuleFilter, options: Webpack.ProxyOptions = {}): T {
+    return cache.proxy(() => getModule<T>(filter, {...options, fatal: true})!, options.typeofIsObject);
+} 
+
+export function getMangledProxy<T extends object>(
+    filter: Webpack.ModuleFilter | string | RegExp | Array<string | RegExp> | number,
+    mappers: Record<keyof T, Webpack.ExportedOnlyFilter>,
+    options: Webpack.MangledOptions = {}
+): T {
+    return cache.proxy(() => getMangled<T>(filter, mappers, {...options, fatal: true}));
 }

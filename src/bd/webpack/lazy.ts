@@ -1,3 +1,4 @@
+import Logger from "@bd/core/logger";
 import type { Webpack } from "../types";
 import { getDeclaration, getModule } from "./searching";
 import { shouldSkipModule, getDefaultKey, wrapModuleFilter, makeException } from "./shared";
@@ -6,6 +7,8 @@ import { FilterFn, waitForSubscriptions, wreq } from "@webpack";
 const ChunkIdRegex = /n\.e\("(\d+)"\)/g;
 const FinalModuleIdRegex = /n\.bind\(n,\s*(\d+)\s*\)/g;
 const CreatePromiseId = /createPromise:\s*\(\)\s*=>\s*([^}]+)\.then\(n\.bind\(n,\s*(\d+)\)\)/g;
+
+const LazyChunkRegex = /Promise\.all\(\[((?:\w\.e\("?\d+"?\),?)+)\]\)\.then\(\w(?:\.\w)?\.bind\(\w,\s*"?(\d+)"?\)\)/g;
 
 export function getLazy<T>(filter: Webpack.ModuleFilter, options: Webpack.LazyOptions = {}): Promise<T | undefined> {
     const { signal: abortSignal, defaultExport = true, searchDefault = true, searchExports = false, raw = false, fatal = false, declarationFilter } = options;
@@ -115,4 +118,55 @@ export async function forceLoad(id: string | number): Promise<any[]> {
     }
 
     return loadedModules;
+}
+
+type NOOP = (...args: unknown[]) => unknown;
+const strip = (str: string) => str.replace(/\s+/g, "");
+
+const ContentCache = new Map();
+
+export async function loadEntry(string: NOOP | string) {
+    if (!string) return null;
+
+    const start = String(string);
+    if (!start) return null;
+
+    const end = strip(start);
+
+    const chunks = Array.from(end.matchAll(LazyChunkRegex));
+    if (chunks.length === 0) return null;
+
+    const entries: string[] = [];
+
+    await Promise.all(chunks.map(async ([, rawChunkIds, entryPoint]) => {
+        const chunkIds = Array.from(rawChunkIds.matchAll(ChunkIdRegex), m => m[1]);
+        if (chunkIds.length === 0) return;
+
+        await Promise.all(chunkIds.map(async id => {
+            const path = wreq.u(id);
+            if (path == null || path.includes("undefined.js")) return;
+
+            try {
+                const isWorker = await ContentCache.getOrInsertComputed(id, () => {
+                    return fetch(wreq.p + path)
+                        .then(r => r.text())
+                        .then(text => /importScripts\(|self\.postMessage/.test(text));
+                });
+
+                if (isWorker) return;
+
+                await wreq.e(id);
+            }
+            catch (e) {
+                Logger.error((e as string));
+            }
+        }));
+
+        if (wreq.m[entryPoint]) {
+            wreq(entryPoint);
+            entries.push(entryPoint);
+        }
+    }));
+
+    return entries.map(x => wreq(x));
 }

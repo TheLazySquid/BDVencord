@@ -4,9 +4,10 @@ import debounce from "../utils/debounce";
 import extend from "../utils/extend";
 import findInTree from "../utils/findintree";
 import getNestedProp from "../utils/nested";
-import {forceLoad} from "../webpack";
+import {forceLoad, loadEntry} from "../webpack";
 import Store from "../stores/base";
 import { mapObject } from "@bd/utils/object";
+import cache from "@bd/utils/cache";
 
 
 /**
@@ -30,9 +31,17 @@ const Utils = {
      * Loads the module ids within a chunk
      *
      * @param {number | string} id module with the chunk id.
-     * @returns {Promise<object>} resolved chunk module
+     * @returns {Promise<object>} resolved chunk modules
      */
     forceLoad: forceLoad,
+
+    /**
+     * Loads the entry ids of a method.
+     *
+     * @param string Function source.
+     * @returns Resolved chumk module
+     */
+    loadEntry: loadEntry,
 
     /**
      * Deep extends an object with a set of other objects. Objects later in the list
@@ -104,7 +113,30 @@ const Utils = {
 
     mapObject,
 
-    Store
+    Store,
+
+    /**
+     * A simple utility for caching a result
+     *
+     * @example
+     * const foo = cache(() => console.log("Called"));
+     *
+     * foo(); // LOG: Called
+     * foo(); // No log
+     */
+    cache: Object.assign(<T>(factory: () => T) => cache<T>(factory), {
+        /**
+         * Like {@link Utils.cache} but factory runs when its accessed instead of manually calling it
+         *
+         * @example
+         * const foo = cache.proxy(() => console.log("Called")); // no log
+         *
+         * foo.bar // LOG: Called
+         * foo.bar // No log
+         */
+
+        proxy: <T extends object>(factory: () => T, typeofIsObject?: boolean, CALL_LIMIT?: number) => cache.proxy<T>(factory, typeofIsObject, CALL_LIMIT)
+    })
 } as const;
 
 // https://stackoverflow.com/questions/58434389/typescript-deep-keyof-of-a-nested-object/58436959#58436959

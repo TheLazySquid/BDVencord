@@ -57,4 +57,9 @@ export type ModuleWithoutEffect = [
 ];
 
 export type DefaultKey = "default" | "A" | "Ay";
+
+export type ProxyOptions = Omit<Options, "fatal"> & {
+    /** Makes the proxy be an object when `true` sometimes needed for react components */
+    typeofIsObject?: boolean;
+};
 // }
