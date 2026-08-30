@@ -3,38 +3,32 @@ import { React } from "@webpack/common";
 import Flex from "../../base/flex";
 import { LucideIcon } from "@bd/ui/icons";
 import { Check } from "lucide";
+import { useItemProps, type BaseSettingProps } from "./utils";
 
-export interface CheckboxProps {
-    value: boolean,
+interface CheckboxPropsBase {
+    defaultValue?: boolean,
     onChange(newState: boolean): void,
     className?: string,
     inputClassName?: string,
     iconClassName?: string,
     id?: string,
-    label?: React.ReactElement | string,
+    label?: React.ReactNode,
     labelClassName?: string,
     disabled?: boolean,
     reverse?: boolean;
 }
 
+export type CheckboxProps = CheckboxPropsBase & BaseSettingProps<boolean>;
+
 export default function CheckBox(props: CheckboxProps) {
-    const [state, setState] = React.useState(props.value);
-
-    const onChange = React.useCallback(() => {
-        if (props.disabled) return;
-        setState((value) => {
-            props.onChange?.(!value);
-
-            return !value;
-        });
-    }, [props]);
+    const { state, setState: toggle, disabled } = useItemProps<boolean, React.MouseEvent>(props, (_, bool) => !bool);
 
     return (
         <Flex
-            className={clsx("bd-checkbox", props.className, { "bd-checkbox-disabled": props.disabled, "bd-checkbox-has-label": props.label, "bd-checkbox-reverse": props.reverse })}
+            className={clsx("bd-checkbox", props.className, { "bd-checkbox-disabled": disabled, "bd-checkbox-has-label": props.label, "bd-checkbox-reverse": props.reverse })}
             align={Flex.Align.CENTER}
             direction={props.reverse ? Flex.Direction.HORIZONTAL_REVERSE : Flex.Direction.HORIZONTAL}
-            onClick={onChange}
+            onClick={toggle}
         >
             <input
                 type="checkbox"
@@ -46,7 +40,7 @@ export default function CheckBox(props: CheckboxProps) {
                 <LucideIcon icon={Check} size={18} />
             </div>
             {props.label && (
-                <div className={clsx("bd-checkbox-label")}>{props.label}</div>
+                <div className={clsx("bd-checkbox-label", props.labelClassName)}>{props.label}</div>
             )}
         </Flex>
     );

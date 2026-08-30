@@ -1,13 +1,13 @@
 import { React } from "@webpack/common";
 import type Store from "../stores/base";
-import {shallowEqual} from "fast-equals";
-import type {FluxStore} from "../types/modules";
+import { shallowEqual } from "fast-equals";
+import type { FluxStore } from "../types/modules";
 
 type StoreType = Store | FluxStore;
 
 export function useStateFromStores<T>(stores: StoreType | StoreType[], factory: () => T, deps?: React.DependencyList, areStateEqual: true | ((oldState: T, newState: T) => boolean) = (oldState, newState) => oldState === newState): T {
-    const {useInsertionEffect, useRef} = React;
-    
+    const { useInsertionEffect, useRef } = React;
+
     const [, forceUpdate] = useForceUpdate();
     const state = useRef(undefined as T);
     const factoryRef = useRef(undefined as unknown as () => T);
@@ -74,6 +74,31 @@ export function useStateFromStores<T>(stores: StoreType | StoreType[], factory: 
 }
 
 export function useForceUpdate() {
-    const {useReducer} = React;
+    const { useReducer } = React;
     return useReducer<number, any>((num) => num + 1, 0);
 }
+
+type AnyFN = (...args: any[]) => any;
+
+export function useCallbackRef<T extends AnyFN>(callback: T): T {
+    const ref = React.useRef(callback);
+
+    ref.current = callback;
+
+    return React.useMemo(() => {
+        const handler: ProxyHandler<typeof ref.current> = {
+            get [Symbol.for("callback")]() {
+                return ref.current;
+            }
+        };
+
+        for (const key of Reflect.ownKeys(Reflect) as Array<keyof typeof Reflect>) {
+            if (typeof Reflect[key] !== "function") continue;
+
+            // @ts-expect-error TS Sucks
+            handler[key] = (_, ...args) => Reflect[key](ref.current, ...args);
+        }
+
+        return new Proxy(ref.current, handler);
+    }, []);
+};

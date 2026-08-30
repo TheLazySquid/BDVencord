@@ -1,8 +1,8 @@
 import { React } from "@webpack/common";
-import Remote from "@bd/polyfill/remote";
 import Button from "@bd/ui/base/button";
 import { LucideIcon } from "@bd/ui/icons";
 import { X } from "lucide";
+import Remote from "@bd/polyfill/remote";
 import type { ChangeEvent } from "react";
 
 
@@ -49,8 +49,7 @@ export default function Filepicker({ multiple, accept, clearable, onChange, disa
     }, [onChange, multiple]);
 
     useEffect(() => {
-        if (!actions) return;
-        actions.clear = clear;
+        if (!actions) return; actions.clear = clear;
     }, [clear, actions]);
 
     const onClick = useCallback(() => {
