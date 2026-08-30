@@ -57,7 +57,8 @@ async function calculateGitChanges() {
 }
 
 async function fetchUpdates() {
-    const data = await githubGet("/releases/latest");
+    // BDVencord has both the installer and code released in the same repo, so we hardcode the code release
+    const data = await githubGet("/releases/290026220");
 
     const hash = data.name.slice(data.name.lastIndexOf(" ") + 1);
     if (hash === gitHash)
