@@ -11,7 +11,7 @@ You can download the installer for your respective platform in the [Installer Re
 
 The easiest way to download plugins is to click "Open BetterDiscord plugin store" in the "BD Plugins" tab in settings.
 
-You can also download `.plugin.js` files from the [BetterDiscord site](https://betterdiscord.app/plugins) and the drag and drop them into BD Plugins in settings, or place them directly in your `Vencord/plugins` folder. This can easily be found by clicking "Open Plugin Folder" in the BD Plugins tab of settings.
+You can also download `.plugin.js` files from the [BetterDiscord site](https://betterdiscord.app/plugins) and then drag and drop them into BD Plugins in settings, or place them directly in your `Vencord/plugins` folder. This can easily be found by clicking "Open Plugin Folder" in the BD Plugins tab of settings.
 
 Plugins can be enabled/disabled from inside the BD Plugins tab in settings. Their settings can also be accessed there.
 
