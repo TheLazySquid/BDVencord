@@ -1,25 +1,315 @@
-import { Filters, getByKeys, getMangled } from "../webpack";
-import Patcher from "../core/patcher";
+import type { ReactNode } from "react";
+import { Filters, getByKeys, getLazyByKeys, getMangled } from "../webpack";
 import Logger from "../core/logger";
 import { React } from "@webpack/common";
 import { wreq } from "@webpack";
 import DiscordModules from "../webpack/modules";
+import NodePatcher from "../core/nodepatcher";
+import DOMManager from "@bd/core/dommanager";
 
-export class MenuPatcher {
+let startupComplete = false;
+
+// https://github.com/doggybootsy/vx/blob/main/packages/mod/src/api/menu/components.ts
+type MenuItemColor =
+    | "default"
+    | "brand"
+    | "danger"
+    | "premium"
+    | "premium-gradient"
+    | "success";
+
+interface RenderPropContext {
+    isFocused: boolean;
+    disabled?: boolean;
+}
+
+type LabelOrRenderable<T = RenderPropContext> = React.ReactNode | ((ctx: T) => React.ReactNode);
+
+interface MenuItemIndicator {
+    icon: React.ComponentType<any>;
+    color?: string;
+    className?: string;
+    [key: string]: any;
+}
+
+type BadgeTypes = "beta" | "new" | "free_trial" | "early_access"
+type BadgeVariants = MenuItemColor
+
+type MenuItemBadge = BadgeTypes | {
+    type: BadgeTypes,
+    variant?: BadgeVariants
+};
+
+type MenuItemAccessory =
+    | { type: "icon"; icon: React.ComponentType<any>; color?: string; className?: string; [key: string]: any }
+    | { type: "emoji"; emojiId?: string; src?: string; animated?: boolean }
+    | { type: "image"; src: string }
+    | { type: "avatar"; src: string }
+    | { type: "roleDot"; variant: "dot" | "pill"; color?: string; colors?: string[] }
+    | { type: "status"; status: string }
+    | { type: "guildTag"; element: React.ReactNode };
+
+type DistributiveOmit<T, K extends keyof any> = T extends any ? Omit<T, K> : never;
+
+type CustomItemContext = { color: MenuItemColor; disabled?: boolean; isFocused: boolean }
+export type BaseMenuItemProps = Record<string, any> & {
+    label: LabelOrRenderable;
+    id: string;
+    /** @obsolete use `label` instead. This was technically removed months ago. */
+    // void_label?: LabelOrRenderable;
+    color?: MenuItemColor;
+    /** @deprecated use `leadingAccessory` instead. This will be removed when the context menu mana experiment is fully pushed. */
+    icon?: React.ComponentType<any> | React.ReactNode; // trailing icon
+    /** @deprecated use `leadingAccessory` instead. This will be removed when the context menu mana experiment is fully pushed. */
+    iconLeft?: React.ComponentType<any> | React.ReactNode; // leading icon
+    iconProps?: Record<string, any>;
+    leadingAccessory?: MenuItemAccessory;
+    trailingIndicator?: MenuItemIndicator;
+    shortcut?: React.ReactNode;
+    subtext?: React.ReactNode;
+    subtextLineClamp?: number;
+    loading?: boolean;
+    badge?: MenuItemBadge;
+    disabled?: boolean;
+    className?: string;
+    focusedClassName?: string;
+    action?: (event: React.MouseEvent) => void;
+    dontCloseOnAction?: boolean;
+    dontCloseOnActionIfHoldingShiftKey?: boolean;
+    navigable?: boolean;
+
+    children?: React.ReactNode;
+    onChildrenScroll?: (event: Event) => void;
+    childRowHeight?: number;
+    listClassName?: string;
+    subMenuClassName?: string;
+
+    // Turns into a customitem type in ContextMenu
+    render?: (ctx: CustomItemContext) => React.ReactNode;
+};
+
+export type MenuCheckboxItemProps = {
+    label: LabelOrRenderable;
+    id: string;
+    disabled?: boolean,
+    subtext?: React.ReactNode,
+    action?(event: React.MouseEvent): void,
+    checked: boolean;
+};
+
+export interface MenuControlProps {
+    disabled?: boolean,
+    isFocused: boolean,
+    onClose(): void;
+};
+
+export type MenuRadioItemProps = MenuCheckboxItemProps & {
+    group: string;
+};
+
+export interface MenuControlRef {
+    activate(): void,
+    blur(): void,
+    focus(): void;
+};
+
+export type MenuControlItemProps = {
+    label: LabelOrRenderable;
+    id: string;
+    disabled?: boolean,
+    control(props: MenuControlProps, ref: {ref: null | void | MenuControlRef;}): React.ReactElement;
+};
+
+// https://github.com/doggybootsy/vx/blob/main/packages/mod/src/betterdiscord/context-menu.tsx
+interface MenuItemSeparator {
+    type: "separator";
+}
+
+type MenuItemSubmenu = DistributiveOmit<BaseMenuItemProps, "children"> & {
+    type: "submenu",
+    /** @deprecated use `items` instead */
+    render?: MenuItem[],
+    items?: MenuItem[],
+    children?: MenuItem[],
+    danger?: boolean,
+    action?(event: React.MouseEvent): void,
+};
+
+type MenuItemDefault = DistributiveOmit<BaseMenuItemProps, "children"> & {
+    type?: "item",
+    danger?: boolean,
+    action?(event: React.MouseEvent): void,
+};
+
+interface MenuItemRadio extends Omit<MenuRadioItemProps, "action"> {
+    type: "radio",
+    danger?: boolean,
+    action?(event: React.MouseEvent): void,
+    /** @deprecated use `checked` instead */
+    active?: boolean;
+}
+
+interface MenuItemCheckbox extends Omit<MenuCheckboxItemProps, "action"> {
+    type: "toggle",
+    danger?: boolean,
+    action?(event: React.MouseEvent): void,
+    /** @deprecated use `checked` instead */
+    active?: boolean;
+}
+
+interface MenuItemControl extends Omit<MenuControlItemProps, "label"> {
+    type: "control";
+    label?: string | ReactNode;
+}
+
+interface MenuItemGroup {
+    type: "group",
+    label?: LabelOrRenderable,
+    items: MenuItem[];
+}
+
+type MenuItem = MenuItemSeparator | MenuItemSubmenu | MenuItemDefault | MenuItemRadio | MenuItemCheckbox | MenuItemControl | MenuItemGroup;
+
+interface ContextMenuComponents {
+    MenuSeparator: React.FC;
+    MenuCheckboxItem: React.FC<React.PropsWithChildren<MenuCheckboxItemProps>>;
+    MenuRadioItem: React.FC<React.PropsWithChildren<MenuRadioItemProps>>;
+    MenuControlItem: React.FC<React.PropsWithChildren<MenuControlItemProps>>;
+    MenuGroup: React.FC<React.PropsWithChildren>;
+    MenuItem: React.FC<React.PropsWithChildren<BaseMenuItemProps>>;
+    Menu: React.FC<React.PropsWithChildren<MenuRenderProps>>;
+}
+
+interface MenuRenderProps {
+    config: MenuConfig & {context: "APP";},
+    context: "APP",
+    onHeightUpdate: () => void,
+    position: "right" | "left",
+    target: Element,
+    theme: string;
+}
+
+interface MenuConfig {
+    /** Default position for the menu */
+    position?: "right" | "left",
+    /** Default alignment for the menu */
+    align?: "top" | "bottom",
+    /** Function to run when the menu is closed */
+    onClose?(): void;
+}
+
+interface ContextMenuObject {
+    config: MenuConfig;
+    rect: DOMRect;
+    render?: React.ComponentType<MenuRenderProps>;
+    renderLazy?(): Promise<React.ComponentType<MenuRenderProps>>;
+    target: Element;
+}
+
+type MenuRenderNode = React.ReactElement<MenuRenderProps, React.ComponentType<MenuRenderProps>>;
+
+type PatchCallback = (
+    res: React.ReactElement<React.PropsWithChildren<MenuRenderProps>>,
+    props: MenuRenderProps,
+    instance?: React.Component<MenuRenderProps>
+) => void;
+
+function globToRegExp(glob: string) {
+    let out = "^";
+
+    for (let i = 0; i < glob.length; i++) {
+        const c = glob[i];
+
+        if (c === "*") {
+            out += ".*";
+            continue;
+        }
+
+        // escape regex metacharacters
+        if ("\\^$+?.()|{}[]".includes(c)) {
+            out += "\\";
+        }
+
+        out += c;
+    }
+
+    out += "$";
+    return new RegExp(out);
+}
+
+const nodePatcher = new NodePatcher();
+let MenuComponents: any;
+let ContextMenuActions: any;
+
+export class MenuPatcher {    
+    private static async contextMenuFixForLucide() {
+        // Hopefully this will be faster than using css class selectors
+        const menuClasses = await getLazyByKeys<Record<string, string>>(["colorDefault", "focused"], {
+            cacheId: "core-contextmenu-classes"
+        });
+
+        // Discord manually sets the fill here, so we are reverting it back to the HTML tag
+        // .colorDefault.focused:not(.checkboxContainer) path {fill: var(--interactive-text-active)}
+        // .colorDanger.focused:not(.checkboxContainer) path {fill: var(--text-feedback-critical)}
+
+        DOMManager.injectStyle("bd-lucide-context-menu-fix", `
+            :where(.${menuClasses!.colorDefault}, .${menuClasses!.colorDanger}).${menuClasses!.focused}:not(.${menuClasses!.checkboxContainer}) .lucide:not(.lucide-betterdiscord) path {
+                fill: revert;
+            }
+        `);
+    }
+
     static MAX_PATCH_ITERATIONS = 10;
-    static patches = {};
-    static subPatches = new WeakMap();
-    static MenuComponents: any = {};
-    static ContextMenuActions: any = {};
+
+    static patches: {
+        named: Record<string, Set<PatchCallback>>,
+        regex: Array<{regex: RegExp, patches: Set<PatchCallback>;}>;
+    } = {
+        named: {},
+        regex: []
+    };
+
+    static handleRender<T extends React.ComponentType<MenuRenderProps>>(Component: T): T {
+        const fNode = {type: Component} as MenuRenderNode;
+
+        nodePatcher.patch(fNode, (props, node, instance) => {
+            if (React.isValidElement(node)) {
+                if ((node.props as any).navId) {
+                    MenuPatcher.runPatches((node.props as any).navId, node as MenuRenderNode, props, instance);
+                }
+                else if (node.type && typeof node.type !== "string") {
+                    MenuPatcher.patchRecursive(node as MenuRenderNode);
+                }
+            }
+
+            return node;
+        });
+
+        return fNode.type as T;
+    }
 
     static initialize() {
-        let startupComplete = false;
+        if (!startupComplete) return Logger.warn("ContextMenu~Patcher", "Startup wasn't successful, aborting initialization.");
 
-        // TODO: actually do the typing
-        // https://github.com/doggybootsy/vx/blob/main/packages/mod/src/betterdiscord/context-menu.tsx
-        // https://github.com/doggybootsy/vx/blob/main/packages/mod/src/api/menu/components.ts
-        const ModulesBundle: any = getByKeys(["MenuItem", "Menu"]);
-        this.MenuComponents = {
+        this.contextMenuFixForLucide();
+
+        DiscordModules.Dispatcher.addInterceptor<{type: "CONTEXT_MENU_OPEN", contextMenu: ContextMenuObject;}>((event) => {
+            if (event.type === "CONTEXT_MENU_OPEN") {
+                if (event.contextMenu.renderLazy) {
+                    const renderLazy = event.contextMenu.renderLazy;
+                    event.contextMenu.renderLazy = async () => {
+                        const render = await renderLazy();
+                        return this.handleRender(render);
+                    };
+                }
+                else {
+                    event.contextMenu.render = this.handleRender(event.contextMenu.render!);
+                }
+            }
+        });
+
+        const ModulesBundle = getByKeys<ContextMenuComponents>(["MenuItem", "Menu"], {cacheId: "core-contextmenu-ModulesBundle"})!;
+        MenuComponents = {
             Separator: ModulesBundle?.MenuSeparator,
             CheckboxItem: ModulesBundle?.MenuCheckboxItem,
             RadioItem: ModulesBundle?.MenuRadioItem,
@@ -29,7 +319,7 @@ export class MenuPatcher {
             Menu: ModulesBundle?.Menu,
         };
 
-        startupComplete = Object.values(this.MenuComponents).every(v => v);
+        startupComplete = Object.values(MenuComponents).every(v => v);
 
         if (!startupComplete) {
             const REGEX = /(function .{1,3}\(.{1,3}\){return null}){5}/;
@@ -63,40 +353,40 @@ export class MenuPatcher {
 
             for (const [, key, type] of menuParser.matchAll(EXTRACT_REGEX)) {
                 switch (type) {
-                    case "separator": this.MenuComponents.Separator ??= contextMenuComponents[key]; break;
-                    case "radio": this.MenuComponents.RadioItem ??= contextMenuComponents[key]; break;
-                    case "checkbox": this.MenuComponents.CheckboxItem ??= contextMenuComponents[key]; break;
+                    case "separator": MenuComponents.Separator ??= contextMenuComponents[key]; break;
+                    case "radio": MenuComponents.RadioItem ??= contextMenuComponents[key]; break;
+                    case "checkbox": MenuComponents.CheckboxItem ??= contextMenuComponents[key]; break;
                     case "compositecontrol":
-                    case "control": this.MenuComponents.ControlItem ??= contextMenuComponents[key]; break;
+                    case "control": MenuComponents.ControlItem ??= contextMenuComponents[key]; break;
                     case "customitem":
-                    case "item": this.MenuComponents.Item ??= contextMenuComponents[key]; break;
+                    case "item": MenuComponents.Item ??= contextMenuComponents[key]; break;
                 }
             }
 
             const matchA = menuParser.match(EXTRACT_GROUP_REGEX);
             if (matchA) {
-                this.MenuComponents.Group ??= contextMenuComponents[matchA[1]];
+                MenuComponents.Group ??= contextMenuComponents[matchA[1]];
             }
 
             const matchB = menuParser.match(EXTRACT_GROUP_ITEM_REGEX);
             if (matchB) {
-                this.MenuComponents.Group ??= contextMenuComponents[matchB[matchB[2] === "groupstart" ? 1 : 3]];
-                this.MenuComponents.Item ??= contextMenuComponents[matchB[matchB[2] === "customitem" ? 1 : 3]];
+                MenuComponents.Group ??= contextMenuComponents[matchB[matchB[2] === "groupstart" ? 1 : 3]];
+                MenuComponents.Item ??= contextMenuComponents[matchB[matchB[2] === "customitem" ? 1 : 3]];
             }
 
-            this.MenuComponents.Menu ??= DiscordModules.ContextMenuMenu;
+            MenuComponents.Menu ??= DiscordModules.ContextMenuMenu;
         }
 
-        startupComplete = Object.values(this.MenuComponents).every(v => v);
+        startupComplete = Object.values(MenuComponents).every(v => v);
 
-        this.ContextMenuActions = (() => {
+        ContextMenuActions = (() => {
             const out: any = {};
 
             try {
                 Object.assign(out, getMangled(Filters.bySource("new DOMRect", "CONTEXT_MENU_CLOSE"), {
                     closeContextMenu: Filters.byStrings("CONTEXT_MENU_CLOSE"),
                     openContextMenu: Filters.byStrings("renderLazy")
-                }, { searchDefault: false }));
+                }, {searchDefault: false, cacheId: "core-contextmenu-Actions"}));
 
                 startupComplete &&= typeof (out.closeContextMenu) === "function" && typeof (out.openContextMenu) === "function";
             }
@@ -105,124 +395,132 @@ export class MenuPatcher {
                 Logger.stacktrace("ContextMenu~Components", "Fatal startup error:", error as Error);
 
                 Object.assign(out, {
-                    closeContextMenu: () => { },
-                    openContextMenu: () => { }
+                    closeContextMenu: () => {},
+                    openContextMenu: () => {}
                 });
             }
 
             return out;
         })();
+    }
 
-        Object.assign(ContextMenu.prototype, this.MenuComponents);
-        Object.freeze(ContextMenu);
-        Object.freeze(ContextMenu.prototype);
-        if (!startupComplete) return Logger.warn("ContextMenu~Patcher", "Startup wasn't successfully, aborting initialization.");
+    static patchRecursive(target: MenuRenderNode, iteration = 0) {
+        if (iteration >= this.MAX_PATCH_ITERATIONS) return;
+        const depth = ++iteration;
 
-        const { module, key } = (() => {
-            const foundModule: any = DiscordModules.ContextMenuToPatch;
-            const foundKey = Object.keys(foundModule).find(k => foundModule[k].length === 3);
+        nodePatcher.patch(target, (props, res, instance) => {
+            if (React.isValidElement(res)) {
+                const nodeProps = res.props as any;
 
-            return { module: foundModule, key: foundKey };
-        })();
+                if (nodeProps?.navId ?? nodeProps?.children?.props?.navId) {
+                    MenuPatcher.runPatches(nodeProps.navId ?? nodeProps?.children?.props?.navId, res as any, props, instance);
+                }
+                else {
+                    const layer = nodeProps?.children ? nodeProps.children : res;
 
-        // @ts-expect-error bd
-        Patcher.before("ContextMenuPatcher", module, key, (_, methodArguments) => {
-            const promise = methodArguments[1];
-            methodArguments[1] = async function (...args: any[]) {
-                // @ts-expect-error bd
-                const render = await promise.apply(this, args);
-
-                return props => {
-                    const res = render(props);
-
-                    if (res?.props.navId) {
-                        MenuPatcher.runPatches(res.props.navId, res, props);
+                    if (layer?.type && typeof layer.type !== "string") {
+                        MenuPatcher.patchRecursive(layer, depth);
                     }
-                    else if (typeof res?.type === "function") {
-                        MenuPatcher.patchRecursive(res, "type");
-                    }
+                }
+            }
 
-                    return res;
-                };
-            };
+            return res;
         });
     }
 
-    static patchRecursive(target, method, iteration = 0) {
-        if (iteration >= this.MAX_PATCH_ITERATIONS) return;
-
-        const proxyFunction = this.subPatches.get(target[method]) ?? (() => {
-            const originalFunction = target[method];
-            const depth = ++iteration;
-            function patch(...args: any[]) {
-                // @ts-expect-error bd
-                const res = originalFunction.apply(this, args);
-
-                if (!res) return res;
-
-                if (res.props?.navId ?? res.props?.children?.props?.navId) {
-                    MenuPatcher.runPatches(res.props.navId ?? res.props?.children?.props?.navId, res, args[0]);
+    static runPatches(id: string, res: MenuRenderNode, props: MenuRenderProps, instance?: React.Component<MenuRenderProps>) {
+        if (this.patches.named[id]) {
+            for (const patch of this.patches.named[id]) {
+                try {
+                    patch(res, props, instance);
                 }
-                else {
-                    const layer = res.props.children ? res.props.children : res;
-
-                    if (typeof layer?.type == "function") {
-                        MenuPatcher.patchRecursive(layer, "type", depth);
-                    }
+                catch (error) {
+                    Logger.error("ContextMenu~runPatches", `Could not run ${id} patch for`, patch, error);
                 }
-
-                return res;
             }
+        }
 
-            patch._originalFunction = originalFunction;
-            Object.assign(patch, originalFunction);
-            this.subPatches.set(originalFunction, patch);
+        for (const element of this.patches.regex) {
+            if (!element.regex.test(id)) continue;
 
-            return patch;
-        })();
-
-        target[method] = proxyFunction;
-    }
-
-    static runPatches(id, res, props) {
-        if (!this.patches[id]) return;
-
-        for (const patch of this.patches[id]) {
-            try {
-                patch(res, props);
-            }
-            catch (error) {
-                Logger.error("ContextMenu~runPatches", `Could not run ${id} patch for`, patch, error);
+            for (const patch of element.patches) {
+                try {
+                    patch(res, props, instance);
+                }
+                catch (error) {
+                    Logger.error("ContextMenu~runPatches", `Could not run ${id} patch for`, patch, error);
+                }
             }
         }
     }
 
-    static patch(id, callback) {
-        this.patches[id] ??= new Set();
-        this.patches[id].add(callback);
+    static patch(id: string | RegExp, callback: PatchCallback) {
+        if (typeof id === "string" && id.includes("*")) {
+            id = globToRegExp(id);
+        }
+
+        if (typeof id === "object") {
+            const index = this.patches.regex.findIndex(patch => patch.regex.flags === id.flags && patch.regex.source === id.source);
+
+            if (index !== -1) {
+                this.patches.regex[index].patches.add(callback);
+            }
+            else {
+                this.patches.regex.push({
+                    regex: id,
+                    patches: new Set([callback])
+                });
+            }
+
+            return;
+        }
+
+        this.patches.named[id] ??= new Set();
+        this.patches.named[id].add(callback);
     }
 
-    static unpatch(id, callback) {
-        this.patches[id]?.delete(callback);
+    static unpatch(id: string | RegExp, callback: PatchCallback) {
+        if (typeof id === "string" && id.includes("*")) {
+            id = globToRegExp(id);
+        }
+
+        if (typeof id === "object") {
+            const index = this.patches.regex.findIndex(patch => patch.regex.flags === id.flags && patch.regex.source === id.source);
+
+            if (index !== -1) {
+                this.patches.regex[index].patches.delete(callback);
+
+                if (this.patches.regex[index].patches.size === 0) {
+                    this.patches.regex.splice(index, 1);
+                }
+            }
+
+            return;
+        }
+
+        this.patches.named[id]?.delete(callback);
+        if (this.patches.named[id]?.size === 0) {
+            delete this.patches.named[id];
+        }
     }
 }
 
 
 /**
- * `ContextMenu` is a module to help patch and create context menus. Instance is accessible through the {@link BdApi}.
- * @type ContextMenu
- * @summary {@link ContextMenu} is a utility class for interacting with React internals.
- * @name ContextMenu
+ * `ContextMenu` is a module to help patch and create context menus. An instance is available on {@link BdApi}.
  */
 class ContextMenu {
+    /** @ignore */
+    constructor() {};
+
     /**
      * Allows you to patch a given context menu. Acts as a wrapper around the `Patcher`.
      *
-     * @param {string} navId Discord's internal `navId` used to identify context menus
-     * @param {function} callback Callback function that accepts the React render tree
-     * @returns {function} A function that automatically unpatches
+     * @param navId Discord's internal `navId` used to identify context menus
+     * @param callback Callback function that accepts the React render tree
+     * @returns A function that automatically unpatches
      */
-    patch(navId, callback) {
+    patch(navId: string | RegExp, callback: PatchCallback) {
         MenuPatcher.patch(navId, callback);
 
         return () => MenuPatcher.unpatch(navId, callback);
@@ -231,10 +529,10 @@ class ContextMenu {
     /**
      * Allows you to remove the patch added to a given context menu.
      *
-     * @param {string} navId The original `navId` from patching
-     * @param {function} callback The original callback from patching
+     * @param navId The original `navId` from patching
+     * @param callback The original callback from patching
      */
-    unpatch(navId, callback) {
+    unpatch(navId: string | RegExp, callback: PatchCallback) {
         MenuPatcher.unpatch(navId, callback);
     }
 
@@ -243,9 +541,8 @@ class ContextMenu {
      * match the actual component being built. View those to see what options exist
      * for each, they often have less in common than you might think.
      *
-     * @param {object} props Props used to build the item
-     * @param {string} [props.type="text"] Type of the item, options: text, submenu, toggle, radio, custom, separator
-     * @returns {object} The created component
+     * @param props Props used to build the item
+     * @returns The created component
      *
      * @example
      * // Creates a single menu item that prints "MENU ITEM" on click
@@ -264,25 +561,44 @@ class ContextMenu {
      *      action: (newValue) => {console.log(newValue);}
      * });
      */
-    buildItem(props) {
-        const { type } = props;
-        if (type === "separator") return React.createElement(MenuPatcher.MenuComponents.Separator);
+    buildItem(props: MenuItem) {
+        const {type} = props;
+        if (type === "separator") return React.createElement(MenuComponents.Separator!);
+        if (type === "group") {
+            return React.createElement(
+                MenuComponents.Group!,
+                null,
+                this.buildMenuChildren(props.items)
+            ) as any;
+        }
 
-        let Component = MenuPatcher.MenuComponents.Item;
+        let Component = MenuComponents.Item as React.FC<any>;
         if (type === "submenu") {
-            if (!props.children) props.children = this.buildMenuChildren(props.render || props.items);
+            if (!props.children) {
+                const children = props.render || props.items;
+                if (children) props.children = this.buildMenuChildren(children) as any;
+            }
         }
         else if (type === "toggle" || type === "radio") {
-            Component = type === "toggle" ? MenuPatcher.MenuComponents.CheckboxItem : MenuPatcher.MenuComponents.RadioItem;
+            Component = type === "toggle" ? MenuComponents.CheckboxItem : MenuComponents.RadioItem;
             if (props.active) props.checked = props.active;
         }
         else if (type === "control") {
-            Component = MenuPatcher.MenuComponents.ControlItem;
+            Component = MenuComponents.ControlItem;
         }
-        if (!props.id) props.id = `${props.label.replace(/^[^a-z]+|[^\w-]+/gi, "-")}`;
-        if (props.danger) props.color = "danger";
-        if (props.onClick && !props.action) props.action = props.onClick;
-        props.extended = true;
+
+        if (!props.id) {
+            const label = typeof props.label === "string" ? props.label : "";
+            props.id = `${label.replace(/^[^a-z]+|[^\w-]+/gi, "-")}`;
+        }
+
+        if (props.type !== "control") {
+            // wrapper for old plugins and simplicity.
+            if (props.danger) (props as BaseMenuItemProps).color = "danger";
+            // @ts-expect-error `onClick` is a wrapper for old plugins.
+            if (props.onClick && !props.action) props.action = props.onClick;
+            (props as BaseMenuItemProps).extended = true;
+        }
 
         // This is done to make sure the UI actually displays the on/off correctly
         if (type === "toggle") {
@@ -291,8 +607,8 @@ class ContextMenu {
             const originalAction = props.action;
             props.checked = active;
             props.action = function (ev: React.MouseEvent) {
-                originalAction(ev);
-                doToggle(!active);
+                originalAction?.(ev);
+                if (!ev.defaultPrevented) doToggle(!active);
             };
         }
 
@@ -304,8 +620,8 @@ class ContextMenu {
      * There is no hard limit to the number of groups within groups or number
      * of items in a menu.
      *
-     * @param {Array<object>} setup Array of item props used to build items. See {@link ContextMenu.buildItem}.
-     * @returns {Array<object>} Array of the created component
+     * @param setup Array of item props used to build items. See {@link ContextMenu.buildItem}.
+     * @returns Array of the created component
      *
      * @example
      * // Creates a single item group item with a toggle item
@@ -343,14 +659,14 @@ class ContextMenu {
      *     }]
      * }]);
      */
-    buildMenuChildren(setup) {
-        const mapper = s => {
+    buildMenuChildren(setup: ReadonlyArray<MenuItem | MenuItemGroup>): React.ReactElement[] {
+        const mapper = (s: MenuItem | MenuItemGroup): React.ReactElement => {
             if (s.type === "group") return buildGroup(s);
             return this.buildItem(s);
         };
-        const buildGroup = function (group) {
+        const buildGroup = function (group: MenuItemGroup): React.ReactElement {
             const items = group.items.map(mapper).filter(i => i);
-            return React.createElement(MenuPatcher.MenuComponents.Group, null, items);
+            return React.createElement(MenuComponents.Group!, null, items);
         };
         return setup.map(mapper).filter(i => i);
     }
@@ -360,33 +676,50 @@ class ContextMenu {
      * Calls {@link ContextMenu.buildMenuChildren} under the covers.
      * Used to call in combination with {@link ContextMenu.open}.
      *
-     * @param {Array<object>} setup Array of item props used to build items. See {@link ContextMenu.buildMenuChildren}.
-     * @returns {function} The unique context menu component
+     * @param setup Array of item props used to build items. See {@link ContextMenu.buildMenuChildren}.
+     * @returns The unique context menu component
      */
-    buildMenu(setup) {
-        return (props) => { return React.createElement(MenuPatcher.MenuComponents.Menu, props, this.buildMenuChildren(setup)); };
+    buildMenu(setup: ReadonlyArray<MenuItem | MenuItemGroup>) {
+        return (props: MenuRenderProps) => {return React.createElement(MenuComponents.Menu!, props, this.buildMenuChildren(setup));};
     }
 
     /**
      * Function that allows you to open an entire context menu. Recommended to build the menu with this module.
      *
-     * @param {MouseEvent} event The context menu event. This can be emulated, requires target, and all X, Y locations.
-     * @param {function} menuComponent Component to render. This can be any React component or output of {@link ContextMenu.buildMenu}.
-     * @param {object} config Configuration/props for the context menu
-     * @param {string} [config.position="right"] Default position for the menu, options: "left", "right"
-     * @param {string} [config.align="top"] Default alignment for the menu, options: "bottom", "top"
-     * @param {function} [config.onClose] Function to run when the menu is closed
+     * @param event The context menu event. This can be emulated, requires target, and all X, Y locations.
+     * @param menuComponent Component to render. This can be any React component or output of {@link ContextMenu.buildMenu}.
+     * @param config Configuration/props for the context menu
      */
-    open(event, menuComponent, config) {
-        return MenuPatcher.ContextMenuActions.openContextMenu(event, function (e) {
-            return React.createElement(menuComponent, Object.assign({}, e, { onClose: MenuPatcher.ContextMenuActions.closeContextMenu }));
+    open(event: MouseEvent, menuComponent: React.ComponentType<MenuRenderProps>, config?: MenuConfig) {
+        return ContextMenuActions.openContextMenu(event, function (props: MenuRenderProps) {
+            return React.createElement(menuComponent, Object.assign({}, props, {onClose: ContextMenuActions.closeContextMenu}));
         }, config);
     }
 
     /**
      * Closes the current opened context menu immediately.
      */
-    close() { MenuPatcher.ContextMenuActions.closeContextMenu(); }
+    close() {ContextMenuActions.closeContextMenu();}
+
+    get Separator() { return MenuComponents.Separator };
+    get CheckboxItem() { return MenuComponents.CheckboxItem };
+    get RadioItem() { return MenuComponents.RadioItem };
+    get ControlItem() { return MenuComponents.ControlItem };
+    get Group() { return MenuComponents.Group };
+    get Item() { return MenuComponents.Item };
+    get Menu() { return MenuComponents.Menu };
 }
+
+Object.freeze(ContextMenu);
+Object.freeze(ContextMenu.prototype);
+
+try {
+    // Remove that annoying console warn spam
+    Object.defineProperty(document, "ownerDocument", {
+        value: document
+    });
+}
+// eslint-disable-next-line no-empty
+catch {}
 
 export default ContextMenu;
