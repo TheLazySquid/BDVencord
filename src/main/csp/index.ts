@@ -71,9 +71,10 @@ export const CspPolicies: PolicyMap = {
     "betterdiscord.app": ImageSrc, // BetterDiscord CDN
     "api.betterdiscord.app": ConnectSrc, // BetterDiscord API
 
-    // Tenor, used by TenorSearch plugin and some themes
+    // Tenor & Giphy, used by GifProviderSwitcher plugin and some themes
     "*.tenor.com": ImageAndMediaSrc,
     "*.tenor.co": ImageAndMediaSrc,
+    "*.giphy.com": ImageAndMediaSrc,
 };
 
 const findHeader = (headers: PolicyMap, headerName: Lowercase<string>) => {
