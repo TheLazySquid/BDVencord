@@ -7,8 +7,6 @@ import DiscordModules from "../webpack/modules";
 import NodePatcher from "../core/nodepatcher";
 import DOMManager from "@bd/core/dommanager";
 
-let startupComplete = false;
-
 // https://github.com/doggybootsy/vx/blob/main/packages/mod/src/api/menu/components.ts
 type MenuItemColor =
     | "default"
@@ -289,8 +287,6 @@ export class MenuPatcher {
     }
 
     static initialize() {
-        if (!startupComplete) return Logger.warn("ContextMenu~Patcher", "Startup wasn't successful, aborting initialization.");
-
         this.contextMenuFixForLucide();
 
         DiscordModules.Dispatcher.addInterceptor<{type: "CONTEXT_MENU_OPEN", contextMenu: ContextMenuObject;}>((event) => {
@@ -319,7 +315,7 @@ export class MenuPatcher {
             Menu: ModulesBundle?.Menu,
         };
 
-        startupComplete = Object.values(MenuComponents).every(v => v);
+        let startupComplete = Object.values(MenuComponents).every(v => v);
 
         if (!startupComplete) {
             const REGEX = /(function .{1,3}\(.{1,3}\){return null}){5}/;
@@ -378,6 +374,7 @@ export class MenuPatcher {
         }
 
         startupComplete = Object.values(MenuComponents).every(v => v);
+        if (!startupComplete) return Logger.warn("ContextMenu~Patcher", "Startup wasn't successful, aborting initialization.");
 
         ContextMenuActions = (() => {
             const out: any = {};
