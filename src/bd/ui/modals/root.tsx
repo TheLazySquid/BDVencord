@@ -42,11 +42,11 @@ export default function ModalRoot({className, transitionState, children, size = 
 
     return <FocusLock disableTrack={true}>
         <Spring.animated.div
-                className={clsx("bd-modal-root", size, className, style)}
-                style={springStyles}
-            >
-        {children}
-    </Spring.animated.div>
+            className={clsx("bd-modal-root", size, className, style)}
+            style={springStyles}
+        >
+            {children}
+        </Spring.animated.div>
     </FocusLock>;
 }
 

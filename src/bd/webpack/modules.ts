@@ -81,7 +81,7 @@ export function loadModules() {
             cacheId: "core-AccessibilityContext"
         },
         FocusLock: {
-            filter: m => m?.render?.toString().includes("impressionProperties") && m?.render?.toString().includes(".Provider"),
+            filter: Filters.byStrings("FocusRing was given a focusTarget"),
             searchExports: true,
             firstId: 481060,
             cacheId: "core-FocusLock"
