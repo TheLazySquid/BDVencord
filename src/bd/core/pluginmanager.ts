@@ -60,7 +60,9 @@ export default new class PluginManager extends AddonManager {
     initialized = new Promise<void>(res => this._initResolve = res);
 
     async initialize() {
+        console.log("Loading...");
         const pluginInfo = await VencordNative.bd.getPlugins();
+        console.log("After", pluginInfo);
         for (const info of pluginInfo) {
             const plugin = this.initPlugin(info);
             if (plugin) this.addonList.push(plugin);

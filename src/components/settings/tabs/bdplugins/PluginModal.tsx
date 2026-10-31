@@ -1,6 +1,6 @@
 import "./PluginModal.css";
 import { Margins } from "@components/margins";
-import { Forms, React, Text, Tooltip, Modal, openModal } from "@webpack/common";
+import { React, Tooltip, Modal, openModal } from "@webpack/common";
 import { BDPlugin } from "@bd/core/pluginmanager";
 import { Flex } from "@components/Flex";
 import { classes } from "@utils/misc";
@@ -10,7 +10,8 @@ import { DonateButton, GithubButton, PatreonButton, SupportServerIcon, WebsiteBu
 import { classNameFactory } from "@utils/css";
 import Modals from "@bd/ui/modals";
 import { RenderModalProps } from "@vencord/discord-types";
-import { BaseText } from "@components/BaseText";
+import { Heading } from "@components/Heading";
+import { Paragraph } from "@components/Paragraph";
 
 const cl = classNameFactory("vc-plugin-modal-");
 
@@ -21,10 +22,10 @@ interface BDPluginModalProps extends RenderModalProps {
 
 function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginModalProps) {
     const getSettings = () => {
-        if (!enabled) return <Forms.FormText>Plugins need to be enabled to access their settings.</Forms.FormText>;
+        if (!enabled) return <Paragraph>Plugins need to be enabled to access their settings.</Paragraph>;
 
         const Panel = plugin.instance?.getSettingsPanel?.();
-        if (!Panel) return <Forms.FormText>There are no settings for this plugin.</Forms.FormText>;
+        if (!Panel) return <Paragraph>There are no settings for this plugin.</Paragraph>;
 
         if (Panel instanceof Node || typeof Panel === "string") {
             class Wrapper extends React.Component<any, { hasError: boolean; }> {
@@ -46,7 +47,7 @@ function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginMo
                 }
 
                 render() {
-                    if (this.state.hasError) return <Forms.FormText>Failed to load settings panel.</Forms.FormText>;
+                    if (this.state.hasError) return <Paragraph>Failed to load settings panel.</Paragraph>;
                     return React.createElement("div", {
                         className: "bd-addon-settings-wrap",
                         ref: this.elementRef,
@@ -68,13 +69,13 @@ function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginMo
             onClose={onClose}
             size="lg"
             title={
-                <BaseText tag="h1" weight="semibold" size="lg">{plugin.name} v{plugin.version}</BaseText>
+                <Heading tag="h1" weight="semibold" size="lg">{plugin.name} v{plugin.version}</Heading>
             }
         >
             <div className={"vc-settings-modal-content"}>
                 <section>
                     <Flex className={cl("info")}>
-                        <Forms.FormText className={cl("description")}>{plugin.description}</Forms.FormText>
+                        <Paragraph className={cl("description")}>{plugin.description}</Paragraph>
                         <div className="vc-settings-modal-links">
                             {plugin.patreon && (
                                 <PatreonButton
@@ -115,12 +116,12 @@ function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginMo
                             )}
                         </div>
                     </Flex>
-                    <Text variant="heading-lg/semibold" className={classes(Margins.top8, Margins.bottom8)}>Author</Text>
-                    <Text>{plugin.author}</Text>
+                    <Heading tag="h3" className={classes(Margins.top8, Margins.bottom8)}>Author</Heading>
+                    <div>{plugin.author}</div>
                 </section>
 
                 <section className="bd-plugin-settings">
-                    <Text variant="heading-lg/semibold" className={classes(Margins.top16, Margins.bottom8)}>Settings</Text>
+                    <Heading tag="h3" className={classes(Margins.top16, Margins.bottom8)}>Settings</Heading>
                     <ErrorBoundary noop>
                         {getSettings()}
                     </ErrorBoundary>

@@ -41,4 +41,6 @@ else {
         // Not supported in sandboxed preload scripts but Discord doesn't support it either so who cares
         require(process.env.DISCORD_PRELOAD!);
     }
+
+    contextBridge.exposeInMainWorld("process", process);
 }

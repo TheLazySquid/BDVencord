@@ -1,13 +1,13 @@
 import "./Store.css";
 import { Margins } from "@components/margins";
-import { ModalCloseButton, ModalContent, ModalHeader, ModalProps, ModalRoot, ModalSize, openModal } from "@utils/modal";
-import { React, Select, Text, TextInput, useState } from "@webpack/common";
+import { Modal, openModal, React, Select, TextInput, useState } from "@webpack/common";
 import PluginStore from "@bd/core/pluginstore";
 import PluginStoreCard from "./StoreCard";
 import Paginator from "@bd/ui/misc/paginator";
 import { classes } from "@utils/misc";
 import pluginmanager from "@bd/core/pluginmanager";
 import { Paragraph } from "@components/Paragraph";
+import { RenderModalProps } from "@vencord/discord-types";
 
 const pageSize = 20;
 
@@ -21,7 +21,7 @@ enum SortType {
     Name = "name"
 }
 
-function StoreModal({ transitionState, onClose }: ModalProps) {
+function StoreModal(props: RenderModalProps) {
     const [page, setPage] = useState(0);
     const [sort, setSort] = useState(SortType.Downloads);
     const [search, setSearch] = useState("");
@@ -56,58 +56,51 @@ function StoreModal({ transitionState, onClose }: ModalProps) {
     const wrapper = React.useRef<HTMLDivElement>(null);
 
     return (
-        <ModalRoot size={ModalSize.DYNAMIC} transitionState={transitionState}>
-            <ModalHeader separator={false} className={Margins.bottom8}>
-                <Text variant="heading-xl/bold" style={{ flexGrow: 1 }}>BetterDiscord Plugin Store</Text>
-                <ModalCloseButton onClick={onClose} />
-            </ModalHeader>
-
-            <ModalContent className={Margins.bottom16}>
-                <div className={classes(Margins.bottom20, "vc-plugins-filter-controls")}>
-                    <TextInput
-                        autoFocus value={search}
-                        placeholder="Search for a plugin..."
-                        onChange={(query: string) => setSearch(query)}
-                    />
-                    <Select
-                        options={[
-                            { label: "Most Downloads", value: SortType.Downloads, default: true },
-                            { label: "Not Installed", value: SortType.NotInstalled },
-                            { label: "Most Likes", value: SortType.Likes },
-                            { label: "Last Updated", value: SortType.Modified },
-                            { label: "Newest", value: SortType.ReleaseDate },
-                            { label: "Author", value: SortType.Author },
-                            { label: "Name", value: SortType.Name }
-                        ]}
-                        serialize={String}
-                        select={(type) => setSort(type)}
-                        isSelected={v => v === sort}
-                        closeOnSelect={true}
-                    />
-                </div>
-
-                <div className="bd-plugin-store-cards" ref={wrapper}>
-                    {plugins.slice(page * pageSize, page * pageSize + pageSize).map(plugin => (
-                        <PluginStoreCard key={plugin.id} plugin={plugin} />
-                    ))}
-                </div>
-
-                {plugins.length === 0 && (
-                    <Paragraph>No plugins match search</Paragraph>
-                )}
-
-                <Paginator
-                    currentPage={page}
-                    length={plugins.length}
-                    pageSize={pageSize}
-                    maxVisible={9}
-                    onPageChange={(newPage) => {
-                        setPage(newPage);
-                        wrapper.current?.closest('[class*="scrollerBase"]')?.scrollTo({ top: 0, behavior: "smooth" });
-                    }}
+        <Modal {...props} size="lg" title="BetterDiscord plugin store">
+            <div className={classes(Margins.bottom20, "vc-plugins-filter-controls")}>
+                <TextInput
+                    autoFocus value={search}
+                    placeholder="Search for a plugin..."
+                    onChange={(query: string) => setSearch(query)}
                 />
-            </ModalContent>
-        </ModalRoot>
+                <Select
+                    options={[
+                        { label: "Most Downloads", value: SortType.Downloads, default: true },
+                        { label: "Not Installed", value: SortType.NotInstalled },
+                        { label: "Most Likes", value: SortType.Likes },
+                        { label: "Last Updated", value: SortType.Modified },
+                        { label: "Newest", value: SortType.ReleaseDate },
+                        { label: "Author", value: SortType.Author },
+                        { label: "Name", value: SortType.Name }
+                    ]}
+                    serialize={String}
+                    select={(type) => setSort(type)}
+                    isSelected={v => v === sort}
+                    closeOnSelect={true}
+                />
+            </div>
+
+            <div className="bd-plugin-store-cards" ref={wrapper}>
+                {plugins.slice(page * pageSize, page * pageSize + pageSize).map(plugin => (
+                    <PluginStoreCard key={plugin.id} plugin={plugin} />
+                ))}
+            </div>
+
+            {plugins.length === 0 && (
+                <Paragraph>No plugins match search</Paragraph>
+            )}
+
+            <Paginator
+                currentPage={page}
+                length={plugins.length}
+                pageSize={pageSize}
+                maxVisible={9}
+                onPageChange={(newPage) => {
+                    setPage(newPage);
+                    wrapper.current?.closest('[class*="scrollerBase"]')?.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+            />
+        </Modal>
     );
 }
 

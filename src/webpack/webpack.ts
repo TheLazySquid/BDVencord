@@ -173,23 +173,6 @@ export function _initWebpack(webpackRequire: WebpackRequire) {
     cache = webpackRequire.c;
     patchModuleLoading();
 
-    wreq.d = (target: object, exports: any) => {
-        for (const key in exports) {
-            if (!Reflect.has(exports, key)) continue;
-
-            try {
-                Object.defineProperty(target, key, {
-                    get: () => exports[key](),
-                    set: v => { exports[key] = () => v; },
-                    enumerable: true,
-                    configurable: true
-                });
-            }
-            catch (error) {
-            }
-        }
-    };
-
     Reflect.defineProperty(webpackRequire.c, Symbol.toStringTag, {
         value: "ModuleCache",
         configurable: true,

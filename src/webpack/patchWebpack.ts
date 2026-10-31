@@ -203,24 +203,41 @@ define(Function.prototype, "m", {
 
             define(this, "m", { value: proxiedModuleFactories });
 
+            this.d = (target: object, exports: any) => {
+                for (const key in exports) {
+                    if (!Reflect.has(exports, key)) continue;
+
+                    try {
+                        Object.defineProperty(target, key, {
+                            get: () => exports[key](),
+                            set: v => { exports[key] = () => v; },
+                            enumerable: true,
+                            configurable: true
+                        });
+                    }
+                    catch (error) {
+                    }
+                }
+            };
+
             // Overwrite Webpack's defineExports function to define the export descriptors configurable.
             // This is needed so we can later blacklist specific exports from Webpack search by making them non-enumerable
-            this.d = function (exports, getters, values) {
-                const defineProps = (definitions: Record<PropertyKey, any> | undefined, kind: "get" | "value") => {
-                    for (const key in definitions) {
-                        if (Object.hasOwn(definitions, key) && !Object.hasOwn(exports, key)) {
-                            Object.defineProperty(exports, key, {
-                                enumerable: true,
-                                configurable: true,
-                                [kind]: definitions[key]
-                            });
-                        }
-                    }
-                };
+            // this.d = function (exports, getters, values) {
+            //     const defineProps = (definitions: Record<PropertyKey, any> | undefined, kind: "get" | "value") => {
+            //         for (const key in definitions) {
+            //             if (Object.hasOwn(definitions, key) && !Object.hasOwn(exports, key)) {
+            //                 Object.defineProperty(exports, key, {
+            //                     enumerable: true,
+            //                     configurable: true,
+            //                     [kind]: definitions[key]
+            //                 });
+            //             }
+            //         }
+            //     };
 
-                defineProps(getters, "get");
-                defineProps(values, "value");
-            };
+            //     defineProps(getters, "get");
+            //     defineProps(values, "value");
+            // };
         };
     }
 });
@@ -526,8 +543,8 @@ function demangleClassModule(newValue: AnyModuleFactory) {
             if (!match) continue;
             if (match[1] in module.exports) continue;
 
-            definers[match[1]] = {value: element, enumerable: true};
-            definers[key] = {value: element, enumerable: false};
+            definers[match[1]] = { value: element, enumerable: true };
+            definers[key] = { value: element, enumerable: false };
         }
 
         Object.defineProperties(module.exports, definers);

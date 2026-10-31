@@ -1,5 +1,4 @@
 import "./index.css";
-import { HeadingTertiary } from "@components/Heading";
 import { SettingsTab, wrapTab } from "../BaseTab";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Select, TextInput, useState } from "@webpack/common";
@@ -19,6 +18,7 @@ import { Folder, Check, X, IconNode, FileUp, Store, ChevronRight } from "lucide"
 import { Card } from "@components/Card";
 import { openPluginStore } from "./Store";
 import { confirmFileInstall } from "./InstallPopup";
+import { Heading } from "@components/Heading";
 
 interface ActionButtonProps {
     title: string;
@@ -114,9 +114,9 @@ function BDPlugins() {
 
             <StoreCard />
 
-            <HeadingTertiary className={classes(Margins.top20, Margins.bottom8)}>
+            <Heading className={classes(Margins.top20, Margins.bottom8)}>
                 Filters
-            </HeadingTertiary>
+            </Heading>
 
             <div className={classes(Margins.bottom20, cl("filter-controls"))}>
                 <ErrorBoundary noop>
@@ -139,7 +139,7 @@ function BDPlugins() {
                 </div>
             </div>
 
-            <HeadingTertiary className={Margins.top20}>Plugins</HeadingTertiary>
+            <Heading className={Margins.top20}>Plugins</Heading>
 
             <div
                 className={classes(cl("grid"), dragCounter > 0 && "bd-drop-indicator")}

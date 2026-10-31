@@ -1,8 +1,7 @@
 import { Flex } from "@components/Flex";
 import { Margins } from "@components/margins";
 import { classes } from "@utils/misc";
-import { ModalCloseButton, ModalContent, ModalFooter, ModalHeader, ModalProps, ModalRoot, ModalSize, openModal } from "@utils/modal";
-import { React, Text } from "@webpack/common";
+import { Modal, openModal, React } from "@webpack/common";
 import pluginmanager, { PluginMeta } from "@bd/core/pluginmanager";
 import toasts from "@bd/stores/toasts";
 import { BdWebAddon } from "@bd/types/addonstore";
@@ -11,6 +10,7 @@ import { LucideIcon } from "@bd/ui/icons";
 import CheckBox from "@bd/ui/settings/components/checkbox";
 import { parseJSDoc } from "@bd/utils/jsdoc";
 import { Github, IconNode, Info, Tag, User } from "lucide";
+import { RenderModalProps } from "@vencord/discord-types";
 
 interface PopupProps {
     icon: IconNode;
@@ -45,7 +45,7 @@ interface InstallProps {
 const openUrl = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 const RAW_GIT_URL_REGEX = /^https:\/\/raw\.githubusercontent\.com\/(.+?)\/(.+?)\/(.+?)\/(.+)$/;
 
-function InstallPopup(props: InstallProps & ModalProps) {
+function InstallPopup(props: InstallProps & RenderModalProps) {
     const [enable, setEnable] = React.useState(true);
 
     const install = () => {
@@ -67,32 +67,22 @@ function InstallPopup(props: InstallProps & ModalProps) {
     };
 
     return (
-        <ModalRoot size={ModalSize.MEDIUM} transitionState={props.transitionState}>
-            <ModalHeader separator={false} className={Margins.bottom8}>
-                <Text variant="heading-xl/bold" style={{ flexGrow: 1 }}>{props.name} Installation</Text>
-                <ModalCloseButton onClick={props.onClose} />
-            </ModalHeader>
-
-            <ModalContent className={Margins.bottom16}>
-                <div className="bd-install-modal-items">
-                    <PopupItem icon={Info} content={props.description} />
-                    <PopupItem icon={Tag} content={props.version} />
-                    {props.source && <PopupItem icon={Github} content={props.filename} onClick={openSource} />}
-                    <PopupItem icon={User} content={props.author} />
-                </div>
-            </ModalContent>
-
-            <ModalFooter>
-                <Flex alignItems="center">
-                    <CheckBox
-                        value={enable}
-                        onChange={() => setEnable(!enable)}
-                        label={<Text>Enable after installation</Text>}
-                    />
-                    <Button onClick={install}>Install</Button>
-                </Flex>
-            </ModalFooter>
-        </ModalRoot>
+        <Modal {...props} size="md" title={`${props.name} Installation`}>
+            <div className="bd-install-modal-items">
+                <PopupItem icon={Info} content={props.description} />
+                <PopupItem icon={Tag} content={props.version} />
+                {props.source && <PopupItem icon={Github} content={props.filename} onClick={openSource} />}
+                <PopupItem icon={User} content={props.author} />
+            </div>
+            <Flex alignItems="center">
+                <CheckBox
+                    value={enable}
+                    onChange={() => setEnable(!enable)}
+                    label="Enable after installation"
+                />
+                <Button onClick={install}>Install</Button>
+            </Flex>
+        </Modal>
     );
 }
 
