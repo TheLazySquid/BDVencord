@@ -303,7 +303,7 @@ export const find = traceFunction("find", function find(filter: FilterFn, { isIn
 
     for (const key in cache) {
         const mod = cache[key];
-        if (!mod?.loaded || mod.exports == null) continue;
+        if (mod == null || mod.loaded === false || mod.exports == null) continue;
 
         if (filter(mod.exports)) {
             return isWaitFor ? [mod.exports, key] : mod.exports;
@@ -333,7 +333,7 @@ export function findAll(filter: FilterFn, { topLevelOnly = false }: { topLevelOn
     const ret = [] as any[];
     for (const key in cache) {
         const mod = cache[key];
-        if (!mod?.loaded || mod.exports == null) continue;
+        if (mod == null || mod.loaded === false || mod.exports == null) continue;
 
         if (filter(mod.exports))
             ret.push(mod.exports);
@@ -382,7 +382,7 @@ export const findBulk = traceFunction("findBulk", function findBulk(...filterFns
     outer:
     for (const key in cache) {
         const mod = cache[key];
-        if (!mod?.loaded || mod.exports == null) continue;
+        if (mod == null || mod.loaded === false || mod.exports == null) continue;
 
         for (let j = 0; j < length; j++) {
             const filter = filters[j];

@@ -26,8 +26,14 @@ import VencordNative, { invoke, sendSync } from "./VencordNative";
 contextBridge.exposeInMainWorld("VencordNative", VencordNative);
 contextBridge.exposeInMainWorld("BDRemote", BDRemote);
 
+// Monaco popout
+if (location.href === DESKTOP_MONACO_EDITOR_URL) {
+    contextBridge.exposeInMainWorld("setCss", debounce(VencordNative.quickCss.set));
+    contextBridge.exposeInMainWorld("getCurrentCss", VencordNative.quickCss.get);
+    contextBridge.exposeInMainWorld("getTheme", VencordNative.quickCss.getEditorTheme);
+}
 // Discord
-if (location.protocol !== "data:") {
+else {
     invoke(IpcEvents.INIT_FILE_WATCHERS);
 
     if (IS_DISCORD_DESKTOP) {
@@ -35,11 +41,4 @@ if (location.protocol !== "data:") {
         // Not supported in sandboxed preload scripts but Discord doesn't support it either so who cares
         require(process.env.DISCORD_PRELOAD!);
     }
-
-    contextBridge.exposeInMainWorld("process", process);
-} // Monaco popout
-else {
-    contextBridge.exposeInMainWorld("setCss", debounce(VencordNative.quickCss.set));
-    contextBridge.exposeInMainWorld("getCurrentCss", VencordNative.quickCss.get);
-    contextBridge.exposeInMainWorld("getTheme", VencordNative.quickCss.getEditorTheme);
 }
