@@ -1,80 +1,161 @@
-import Logger from "@bd/core/logger";
-import type { Webpack } from "../types";
-import { getDeclaration, getModule } from "./searching";
-import { shouldSkipModule, getDefaultKey, wrapModuleFilter, makeException } from "./shared";
+import type {Webpack} from "../types";
+import {getMatched, getModule} from "./searching";
+import {makeException, wrapModuleFilter} from "./shared";
+import {getBulk} from "./utilities";
+import Logger from "../core/logger";
 import { FilterFn, waitForSubscriptions, wreq } from "@webpack";
 
-const ChunkIdRegex = /n\.e\("(\d+)"\)/g;
-const FinalModuleIdRegex = /n\.bind\(n,\s*(\d+)\s*\)/g;
-const CreatePromiseId = /createPromise:\s*\(\)\s*=>\s*([^}]+)\.then\(n\.bind\(n,\s*(\d+)\)\)/g;
+const ChunkIdRegex = /.{1}\.e\("(\d+)"\)/g;
+const FinalModuleIdRegex = /.{1}\.bind\(.{1},\s*(\d+)\s*\)/g;
+const CreatePromiseId = /createPromise:\s*\(\)\s*=>\s*([^}]+)\.then\(.{1}\.bind\(.{1},\s*(\d+)\)\)/g;
 
 const LazyChunkRegex = /Promise\.all\(\[((?:\w\.e\("?\d+"?\),?)+)\]\)\.then\(\w(?:\.\w)?\.bind\(\w,\s*"?(\d+)"?\)\)/g;
 
-export function getLazy<T>(filter: Webpack.ModuleFilter, options: Webpack.LazyOptions = {}): Promise<T | undefined> {
-    const { signal: abortSignal, defaultExport = true, searchDefault = true, searchExports = false, raw = false, fatal = false, declarationFilter } = options;
+interface LazyQueue<T = any> {
+    query: Webpack.BulkQueries;
 
-    if (abortSignal?.aborted) {
-        if (fatal) return Promise.reject(makeException());
-        return Promise.resolve(undefined);
+    resolve(value: QueueResolvedState<T>): void;
+}
+
+type QueueResolvedState<T> = {state: "aborted";} | {state: "resolved", value: T;};
+
+const ContentCache = new Map();
+
+const queue = {
+    isFlushing: false,
+    /** @private */
+    _scheduled: false,
+    /** @private */
+    _queue: <LazyQueue[]>[],
+    /** @private */
+    _flushSync() {
+        // Should make it faster?
+        if (this._queue.length === 0) {
+            this._scheduled = false;
+            return;
+        }
+
+        this.isFlushing = true;
+
+        if (this._queue.length === 1) {
+            const [{resolve, query: {filter, ...options}}] = this._queue;
+
+            resolve({state: "resolved", value: getModule<any>(filter, options)});
+
+            this._queue.length = 0;
+            this._scheduled = false;
+            this.isFlushing = false;
+
+            return;
+        }
+
+        const result = getBulk(...this._queue.map((x) => x.query));
+
+        for (let index = 0; index < this._queue.length; index++) {
+            this._queue[index].resolve({
+                state: "resolved",
+                value: result[index]
+            });
+        }
+
+        this._queue.length = 0;
+        this._scheduled = false;
+        this.isFlushing = false;
+    },
+    /** @private */
+    _scheduleFlush() {
+        if (this._scheduled) return;
+
+        this._scheduled = true;
+
+        queueMicrotask(() => this._flushSync());
+    },
+    enqueue<T>(filter: Webpack.ModuleFilter, options?: Webpack.LazyOptions | undefined | null | void): Promise<QueueResolvedState<T>> {
+        if (options?.signal?.aborted) {
+            if (options?.fatal) return Promise.reject(makeException());
+            return Promise.resolve({state: "aborted"});
+        }
+
+        const {promise, resolve, reject} = Promise.withResolvers<QueueResolvedState<T>>();
+
+        const onAbort = () => {
+            if (options?.fatal) reject(makeException());
+            else resolve({state: "aborted"});
+
+            options!.signal!.removeEventListener("abort", onAbort);
+
+            const index = this._queue.indexOf(lazyQueue);
+            if (index !== -1) this._queue.splice(index, 1);
+        };
+
+        options?.signal?.addEventListener("abort", onAbort);
+
+        const lazyQueue: LazyQueue<T> = {
+            query: {
+                ...options,
+                fatal: false,
+                filter
+            },
+            resolve: (value) => {
+                options?.signal?.removeEventListener("abort", onAbort);
+                resolve(value);
+            }
+        };
+
+        this._queue.push(lazyQueue);
+
+        this._scheduleFlush();
+
+        return promise;
     }
+};
 
-    const cached = getModule<T>(filter, options);
-    if (cached) return Promise.resolve(cached);
+export function isFromLazySearch() {
+    return queue.isFlushing;
+}
+
+export async function getLazy<T>(filter: Webpack.ModuleFilter, options: Webpack.LazyOptions = {}): Promise<T | undefined> {
+    const {
+        signal: abortSignal,
+        fatal = false
+    } = options;
+    if (!options.cacheId) options.cacheId = null;
+
+    const state = await queue.enqueue<T>(filter, options);
+
+    if (state.state === "resolved" && typeof state.value !== "undefined") return state.value;
+    if (state.state === "aborted") {
+        if (fatal) throw makeException();
+        return undefined;
+    }
 
     filter = wrapModuleFilter(filter);
 
     return new Promise((resolve, reject) => {
         const cancel = () => void waitForSubscriptions.delete(listener);
 
-        const listener: FilterFn = (_, module) => {
-            if (!module) return false;
-            if (shouldSkipModule(module.exports)) return false;
+        const onAbort = () => {
+            cancel();
+            abortSignal?.removeEventListener("abort", onAbort);
+            if (fatal) reject(makeException());
+            else resolve(undefined);
+        };
 
-            if (filter(module.exports, module, module.id)) {
-                if (declarationFilter) resolve(getDeclaration(module, declarationFilter));
-                resolve(raw ? module : module.exports);
+        const listener: FilterFn = (_, module) => {
+            if(!module) return false;
+            const match = getMatched<T>(module, filter, options);
+
+            if (match) {
+                resolve(match);
                 cancel();
                 return true;
             }
-
-            if (!searchExports && !searchDefault) return false;
-
-            let defaultKey: string | undefined;
-            const searchKeys: string[] = [];
-            if (searchExports) searchKeys.push(...Object.keys(module.exports));
-            else if (searchDefault && (defaultKey = getDefaultKey(module))) searchKeys.push(defaultKey);
-
-            for (let i = 0; i < searchKeys.length; i++) {
-                const key = searchKeys[i];
-                const exported = module.exports[key];
-
-                if (shouldSkipModule(exported)) continue;
-
-                if (filter(exported, module, module.id)) {
-                    if (!defaultExport && defaultKey === key) {
-                        if (declarationFilter) resolve(getDeclaration(module, declarationFilter));
-                        else resolve(raw ? module : module.exports);
-
-                        cancel();
-                        return true;
-                    }
-
-                    if (declarationFilter) resolve(getDeclaration(module, declarationFilter));
-                    else resolve(raw ? module : exported);
-
-                    cancel();
-                }
-            }
-
+            
             return false;
         };
 
-        waitForSubscriptions.set(listener, () => { });
-        abortSignal?.addEventListener("abort", () => {
-            cancel();
-            if (fatal) reject(makeException());
-            else resolve(undefined);
-        });
+        waitForSubscriptions.set(listener, () => {});
+        abortSignal?.addEventListener("abort", onAbort);
     });
 }
 
@@ -83,29 +164,26 @@ export async function forceLoad(id: string | number): Promise<any[]> {
         return [];
     }
     const text = String(wreq.m[id]);
-    const loadedModules = [];
-    let match;
+    const loadedModules: string[] = [];
+    let match: RegExpExecArray | null;
 
     while ((match = CreatePromiseId.exec(text)) !== null) {
         const promiseBody = match[1];
         const bindId = match[2];
-        const chunkIds = [];
+        const chunkIds: string[] = [];
         const chunkMatches = promiseBody.matchAll(ChunkIdRegex);
         for (const chunkMatch of chunkMatches) {
-            // @ts-expect-error bd
             chunkIds.push(chunkMatch[1]);
         }
         const finalId = parseInt(bindId, 10);
         await Promise.all(chunkIds.map((cid) => wreq.e(cid)));
         const loadedModule = wreq(finalId);
-        // @ts-expect-error bd
         loadedModules.push(loadedModule);
     }
 
-    const chunkIds = [];
-    let chunkMatch;
+    const chunkIds: string[] = [];
+    let chunkMatch: RegExpExecArray | null;
     while ((chunkMatch = ChunkIdRegex.exec(text)) !== null) {
-        // @ts-expect-error bd
         chunkIds.push(chunkMatch[1]);
     }
 
@@ -113,7 +191,6 @@ export async function forceLoad(id: string | number): Promise<any[]> {
     for (const bindMatch of bindMatches) {
         await Promise.all(chunkIds.map((cid) => wreq.e(cid)));
         const loadedModule = wreq(bindMatch[1]);
-        // @ts-expect-error bd
         loadedModules.push(loadedModule);
     }
 
@@ -122,8 +199,6 @@ export async function forceLoad(id: string | number): Promise<any[]> {
 
 type NOOP = (...args: unknown[]) => unknown;
 const strip = (str: string) => str.replace(/\s+/g, "");
-
-const ContentCache = new Map();
 
 export async function loadEntry(string: NOOP | string) {
     if (!string) return null;

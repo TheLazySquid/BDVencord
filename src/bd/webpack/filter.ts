@@ -1,8 +1,14 @@
 import { wreq } from "@webpack";
-import type { Webpack } from "../types";
+import type {Webpack} from "../types";
 
-export function byKeys(props: string[], filter: Webpack.ExportedOnlyFilter = m => m): Webpack.ExportedOnlyFilter {
-    return module => {
+function assign<T extends Webpack.ModuleFilter | Webpack.ExportedOnlyFilter>(filter: T, args: any) {
+    return Object.assign(filter, {
+        [Symbol.for("BetterDiscord.Filter")]: args
+    });
+}
+
+export function byKeys(props: readonly string[], filter: Webpack.ExportedOnlyFilter = m => m): Webpack.ExportedOnlyFilter {
+    return assign(module => {
         if (!module) return false;
         if (typeof (module) !== "object" && typeof (module) !== "function") return false;
         const component = filter(module);
@@ -11,11 +17,14 @@ export function byKeys(props: string[], filter: Webpack.ExportedOnlyFilter = m =
             if (!(props[p] in component)) return false;
         }
         return true;
-    };
+    }, {
+        props,
+        filter
+    });
 }
 
-export function byPrototypeKeys(fields: string[], filter: Webpack.ExportedOnlyFilter = m => m): Webpack.ExportedOnlyFilter {
-    return module => {
+export function byPrototypeKeys(fields: readonly string[], filter: Webpack.ExportedOnlyFilter = m => m): Webpack.ExportedOnlyFilter {
+    return assign(module => {
         if (!module) return false;
         if (typeof (module) !== "object" && typeof (module) !== "function") return false;
         const component = filter(module);
@@ -25,24 +34,34 @@ export function byPrototypeKeys(fields: string[], filter: Webpack.ExportedOnlyFi
             if (!(fields[f] in component.prototype)) return false;
         }
         return true;
-    };
+    }, {
+        fields,
+        filter
+    });
 }
 
 export function byRegex(search: RegExp, filter: Webpack.ExportedOnlyFilter = m => m): Webpack.ExportedOnlyFilter {
-    return module => {
+    return assign(module => {
         const method = filter(module);
         if (!method) return false;
         let methodString = "";
-        try { methodString = method.toString([]); }
-        catch { methodString = method.toString(); }
+        try {
+            methodString = method.toString([]);
+        }
+        catch {
+            methodString = method.toString();
+        }
         return methodString.search(search) !== -1;
-    };
+    }, {
+        search,
+        filter
+    });
 }
 
 export function bySource(...searches: Array<string | RegExp>): Webpack.ModuleFilter {
     const moduleCache = wreq.m;
 
-    return (_, module) => {
+    return assign((_, module) => {
         const id = module?.id;
         if (!id) return false;
 
@@ -67,11 +86,13 @@ export function bySource(...searches: Array<string | RegExp>): Webpack.ModuleFil
         }
 
         return true;
-    };
+    }, {
+        searches
+    });
 }
 
 export function byStrings(...strings: string[]): Webpack.ExportedOnlyFilter {
-    return module => {
+    return assign(module => {
         if (typeof module !== "function") return false;
 
         try {
@@ -83,32 +104,72 @@ export function byStrings(...strings: string[]): Webpack.ExportedOnlyFilter {
 
             return true;
         }
-        catch { return false; }
-    };
+        catch {
+            return false;
+        }
+    }, {
+        strings
+    });
 }
 
 export function byDisplayName(name: string): Webpack.ExportedOnlyFilter {
-    return module => {
+    return assign(module => {
         return module && module.displayName === name;
-    };
+    }, {
+        name
+    });
 }
 
 export function byStoreName(name: string): Webpack.ExportedOnlyFilter {
-    return module => {
+    return assign(module => {
         return module?._dispatchToken && module?.getName?.() === name;
-    };
+    }, {
+        name
+    });
+}
+
+export function byDestructure(...properties: string[]): Webpack.ExportedOnlyFilter {
+    return assign(module => {
+        if (typeof module !== "function") return false;
+
+        const str = String(module);
+        let end = str.indexOf("}=");
+
+        while (end !== -1) {
+            const start = str.lastIndexOf("{", end);
+
+            if (start !== -1) {
+                const names = str
+                    .substring(start + 1, end)
+                    .split(",")
+                    .map(p => p.split(":")[0].split("=")[0].trim());
+
+                if (properties.every(p => names.includes(p))) return true;
+            }
+
+            end = str.indexOf("}=", end + 2);
+        }
+
+        return false;
+    }, {
+        properties
+    });
 }
 
 export function combine(...filters: Webpack.ExportedOnlyFilter[]): Webpack.ExportedOnlyFilter;
 export function combine(...filters: Array<Webpack.ExportedOnlyFilter | Webpack.ModuleFilter>): Webpack.ModuleFilter;
 export function combine(...filters: Webpack.ModuleFilter[]): Webpack.ModuleFilter {
-    return (exports, module, id) => {
+    return assign((exports, module, id) => {
         return filters.every(filter => filter(exports, module, id));
-    };
+    }, {
+        filters
+    });
 }
 
 export function not(filter: Webpack.ExportedOnlyFilter): Webpack.ExportedOnlyFilter;
 export function not(filter: Webpack.ExportedOnlyFilter | Webpack.ModuleFilter): Webpack.ModuleFilter;
 export function not(filter: Webpack.ModuleFilter): Webpack.ModuleFilter {
-    return (exports, module, id) => !filter(exports, module, id);
+    return assign((exports, module, id) => !filter(exports, module, id), {
+        filter
+    });
 }

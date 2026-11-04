@@ -1,25 +1,19 @@
-import type { Webpack } from "../types";
-import { getDefaultKey, makeException, shouldSkipModule, wrapDeclarationFilter, wrapModuleFilter } from "./shared";
+import type {Webpack} from "../types";
+import {getDeclaration, getDefaultKey, makeException, shouldSkipModule, wrapModuleFilter} from "./shared";
 import WebpackCache from "./cache";
+import {mapObject} from "../utils/object";
+import {Module} from "@vencord/discord-types/webpack";
 import { wreq } from "@webpack";
 
-export function getDeclaration(module: Webpack.Module<any>, filter: Webpack.ExportedOnlyFilter) {
-    const wrappedFilter = wrapDeclarationFilter(filter);
+export function getMatched<T>(module: Module, filter: Webpack.ModuleFilter, options: Webpack.Options): T | undefined {
+    const {defaultExport = true, searchExports = false, searchDefault = true, raw = false, withKey = false, map, mapDeclarations} = options;
 
-    for (const name in module.declarations) {
-        if (!wrappedFilter(module.declarations[name])) continue;
-        return module.declarations[name];
-    }
-}
-
-export function getMatched<T>(module: Webpack.Module<any>, filter: Webpack.ModuleFilter, options: Webpack.Options): T | undefined {
-    const { defaultExport = true, searchExports = false, searchDefault = true, raw = false } = options;
-
-    if (shouldSkipModule(module.exports)) return;
+    if (shouldSkipModule(module.exports) || !module.id) return;
 
     if (filter(module.exports, module, module.id)) {
-        if (options.declarationFilter) return getDeclaration(module, options.declarationFilter);
-        return raw ? module as T : module.exports;
+        if (options.declarationFilter) return getDeclaration(module, options.declarationFilter, withKey);
+        if (map) return mapObject(module[mapDeclarations ? "declarations" : "exports"], map) as T;
+        return raw ? module as T : withKey ? [module, "exports"] as T : module.exports;
     }
 
     if (!searchExports && !searchDefault) return;
@@ -36,10 +30,11 @@ export function getMatched<T>(module: Webpack.Module<any>, filter: Webpack.Modul
         if (shouldSkipModule(exported)) continue;
 
         if (filter(exported, module, module.id)) {
-            if (options.declarationFilter) return getDeclaration(module, options.declarationFilter);
-            if (!defaultExport && defaultKey === key) return module.exports;
+            if (options.declarationFilter) return getDeclaration(module, options.declarationFilter, withKey);
+            if (map) return mapObject(raw ? module.exports : mapDeclarations ? module.declarations : exported, map) as T;
             if (raw) return module as T;
-            return exported;
+            if (!defaultExport && defaultKey === key) return withKey ? [module, "exports"] as T : module.exports;
+            return withKey ? [module.exports, key] as T : exported;
         }
     }
 }
@@ -84,7 +79,7 @@ export function getModule<T>(filter: Webpack.ModuleFilter, options: Webpack.Opti
 }
 
 export function getAllModules<T extends unknown[]>(filter: Webpack.ModuleFilter, options: Webpack.Options = {}): T {
-    const { defaultExport = true, searchExports = false, searchDefault = true, raw = false, fatal = false } = options;
+    const {defaultExport = true, searchExports = false, searchDefault = true, raw = false, fatal = false, withKey = false, map, mapDeclarations} = options;
 
     filter = wrapModuleFilter(filter);
     const modules = [] as unknown as T;
@@ -93,14 +88,19 @@ export function getAllModules<T extends unknown[]>(filter: Webpack.ModuleFilter,
     for (let i = 0; i < webpackModules.length; i++) {
         const module = webpackModules[i];
 
-        if (shouldSkipModule(module.exports)) continue;
+        if (shouldSkipModule(module.exports) || !module.id) continue;
 
         if (filter(module.exports, module, module.id)) {
             if (options.declarationFilter) {
-                const declared = getDeclaration(module, options.declarationFilter);
+                const declared = getDeclaration(module, options.declarationFilter, withKey);
                 if (declared) modules.push(declared);
             }
-            else {modules.push(raw ? module : module.exports);}
+            else if (map) {
+                modules.push(mapObject(module[mapDeclarations ? "declarations" : "exports"], map));
+            }
+            else {
+                modules.push(raw ? module : withKey ? [module, "exports"] : module.exports);
+            }
         }
 
         if (!searchExports && !searchDefault) continue;
@@ -118,17 +118,19 @@ export function getAllModules<T extends unknown[]>(filter: Webpack.ModuleFilter,
 
             if (filter(exported, module, module.id)) {
                 if (options.declarationFilter) {
-                    const declared = getDeclaration(module, options.declarationFilter);
+                    const declared = getDeclaration(module, options.declarationFilter, withKey);
                     if (declared) modules.push(declared);
                     continue;
                 }
 
                 if (!defaultExport && defaultKey === key) {
-                    modules.push(module.exports);
+                    if (map) modules.push(mapObject(module[mapDeclarations ? "declarations" : "exports"], map));
+                    else modules.push(withKey ? [module, "exports"] : module.exports);
                     continue;
                 }
 
-                modules.push(raw ? module : exported);
+                if (map) modules.push(mapObject(raw ? module.exports : mapDeclarations ? module.declarations : exported, map));
+                else modules.push(raw ? module : withKey ? [module.exports, key] : exported);
             }
         }
     }

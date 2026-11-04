@@ -1,9 +1,10 @@
-import type { Webpack } from "../types";
+import type {Webpack} from "../types";
 import Logger from "../core/logger";
+import { Module } from "@vencord/discord-types/webpack";
 
 const hasThrown = new WeakSet();
 
-export const wrapModuleFilter = (filter: Webpack.ModuleFilter): Webpack.ModuleFilter => (exports, module, moduleId) => {
+export const wrapModuleFilter = (filter: Webpack.ModuleFilter): Webpack.ModuleFilter => Object.assign(((exports, module, moduleId) => {
     try {
         if (exports instanceof Window) return false;
         if (exports?.default?.remove && exports?.default?.set && exports?.default?.clear && exports?.default?.get && !exports?.default?.sort) return false;
@@ -13,24 +14,36 @@ export const wrapModuleFilter = (filter: Webpack.ModuleFilter): Webpack.ModuleFi
         return filter(exports, module, moduleId);
     }
     catch (error) {
-        if (!hasThrown.has(filter)) Logger.warn("WebpackModules~getModule", "Module filter threw an exception.", error, { filter, module });
+        if (!hasThrown.has(filter)) Logger.warn("WebpackModules~getModule", "Module filter threw an exception.", error, {filter, module});
         hasThrown.add(filter);
         return false;
     }
-};
+}) satisfies Webpack.ModuleFilter, {
+    __originalFilter: filter
+});
 
 export const wrapDeclarationFilter = (filter: Webpack.ExportedOnlyFilter) => Object.assign(((value) => {
     try {
         return filter(value);
     }
     catch (error) {
-        if (!hasThrown.has(filter)) Logger.warn("WebpackModules~getModule", "Declaration filter threw an exception.", error, { filter });
+        if (!hasThrown.has(filter)) Logger.warn("WebpackModules~getModule", "Declaration filter threw an exception.", error, {filter});
         hasThrown.add(filter);
         return false;
     }
 }) satisfies Webpack.ExportedOnlyFilter, {
     __originalFilter: filter
 });
+
+export function getDeclaration(module: Module, filter: Webpack.ExportedOnlyFilter, withKey: boolean) {
+    const wrappedFilter = wrapDeclarationFilter(filter);
+
+    for (const name in module.declarations) {
+        if (!wrappedFilter(module.declarations[name])) continue;
+        if (withKey) return [module.declarations, name];
+        return module.declarations[name];
+    }
+}
 
 const TypedArray = Object.getPrototypeOf(Uint8Array);
 export function shouldSkipModule(exports: any) {
@@ -47,7 +60,7 @@ export function shouldSkipModule(exports: any) {
     return false;
 }
 
-export function getDefaultKey(module: Webpack.Module): Webpack.DefaultKey | undefined {
+export function getDefaultKey(module: Module): Webpack.DefaultKey | undefined {
     if ("A" in module.exports) return "A";
     if ("Ay" in module.exports) return "Ay";
     if (module.exports.__esModule && "default" in module.exports) return "default";
