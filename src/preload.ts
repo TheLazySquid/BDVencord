@@ -23,7 +23,6 @@ import * as BDRemote from "./bd/remote";
 
 import VencordNative, { invoke, sendSync } from "./VencordNative";
 
-contextBridge.exposeInMainWorld("VencordNative", VencordNative);
 contextBridge.exposeInMainWorld("BDRemote", BDRemote);
 
 // Monaco popout
@@ -34,6 +33,7 @@ if (location.href === DESKTOP_MONACO_EDITOR_URL) {
 }
 // Discord
 else {
+    contextBridge.exposeInMainWorld("VencordNative", VencordNative);
     invoke(IpcEvents.INIT_FILE_WATCHERS);
 
     if (IS_DISCORD_DESKTOP) {
