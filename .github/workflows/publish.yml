@@ -21,7 +21,8 @@ jobs:
         steps:
             - uses: actions/checkout@v7
 
-            - uses: pnpm/action-setup@v6 # Install pnpm using packageManager key in package.json
+            - name: Setup pnpm
+              uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # Install pnpm using packageManager key in package.json
 
             - name: Use Node.js 19
               uses: actions/setup-node@v6
