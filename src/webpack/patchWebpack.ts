@@ -203,19 +203,27 @@ define(Function.prototype, "m", {
 
             define(this, "m", { value: proxiedModuleFactories });
 
-            this.d = (target: object, exports: any) => {
-                for (const key in exports) {
-                    if (!Reflect.has(exports, key)) continue;
-
-                    try {
-                        Object.defineProperty(target, key, {
-                            get: () => exports[key](),
-                            set: v => { exports[key] = () => v; },
+            this.d = function (exports, getters, values) {
+                for (const key in getters) {
+                    if (Object.hasOwn(getters, key) && !Object.hasOwn(exports, key)) {
+                        Object.defineProperty(exports, key, {
                             enumerable: true,
-                            configurable: true
+                            configurable: true,
+                            get: () => getters[key](),
+                            set: (v) => {
+                                getters[key] = () => v;
+                            }
                         });
                     }
-                    catch (error) {
+                }
+                for (const key in values) {
+                    if (Object.hasOwn(values, key) && !Object.hasOwn(exports, key)) {
+                        Object.defineProperty(exports, key, {
+                            enumerable: true,
+                            configurable: true,
+                            writable: true,
+                            value: values[key]
+                        });
                     }
                 }
             };
