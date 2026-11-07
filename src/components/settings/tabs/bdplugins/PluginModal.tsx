@@ -18,13 +18,12 @@ const cl = classNameFactory("vc-plugin-modal-");
 interface BDPluginModalProps extends RenderModalProps {
     plugin: BDPlugin;
     enabled: boolean;
+    Panel: any;
 }
 
-function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginModalProps) {
+function BDPluginModal({ plugin, enabled, onClose, transitionState, Panel }: BDPluginModalProps) {
     const getSettings = () => {
         if (!enabled) return <Paragraph>Plugins need to be enabled to access their settings.</Paragraph>;
-
-        const Panel = plugin.instance?.getSettingsPanel?.();
         if (!Panel) return <Paragraph>There are no settings for this plugin.</Paragraph>;
 
         if (Panel instanceof Node || typeof Panel === "string") {
@@ -132,9 +131,19 @@ function BDPluginModal({ plugin, enabled, onClose, transitionState }: BDPluginMo
 }
 
 export function openPluginModal(plugin: BDPlugin, enabled: boolean) {
+    let Panel: any;
+
+    // DevilBro plugins have the getSettingsPanel method open his own modal
+    // And things start to break if we have the default modal and his together
+    if(typeof plugin.instance?.getSettingsPanel === "function") {
+        Panel = plugin.instance.getSettingsPanel();
+        if(!Panel) return;
+    }
+
     openModal(modalProps => (
         <BDPluginModal
             {...modalProps}
+            Panel={Panel}
             plugin={plugin}
             enabled={enabled}
         />
